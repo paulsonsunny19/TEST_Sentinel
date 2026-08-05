@@ -1,89 +1,89 @@
 FileName, CommitSha
-AnalyticsRules/PSOC - Possible windows defender disable activity.json,f660647a17fbec4392f4ca77d6f401ddb142d4de
-AnalyticsRules/PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh.json,cf2ef83eb8f21989bf2eb0077f8bd137d3af0d90
-AnalyticsRules/PSOC - Possible persistence via registry key detected.json,43bd192765f60927c1df88c23f0206047a94f752
-AnalyticsRules/PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed.json,c0ac9c1a9b4a0aa1bd3a066b74db67b2b8f1a612
-AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Suspicious Delete.json,a3b5df096b13b0191fc582d1948d71ca15472001
-AnalyticsRules/PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe).json,a1b07e25dfb5678004f8ec9ac280a1b531a6789a
-AnalyticsRules/PSOC - Potential KamiKakaBot Activity - Lure Document Execution.json,71a74c81871fdfa138639c8b508f33d98346e0f7
-AnalyticsRules/PSOC - Disable Internal Tools or Feature in Registry.json,4c3f2aaa602437304be9c8b92285e3a28a919c1a
-AnalyticsRules/PSOC - print.exe binary to copy credential files.json,87b55f68ccce13a54f5c3377fec9d312c8ef4418
-AnalyticsRules/PSOC - PowerDrop Malware Strings.json,b04adad977f6740bfdf70ff720b52d076bfec3d5
-AnalyticsRules/PSOC - Suspicious Windows defender logging disable.json,4ac60b8c60656f7cc4ad152203e153c6ab7b9f7f
-AnalyticsRules/PSOC - Suspicious command to list Anti-Virus product installed.json,5ea6324c08817b962548676285a767709746f5e3
-AnalyticsRules/PSOC - Scheduled Task creation during Non Business Hours.json,00cb66af92044370366c9325559a1ec1f8fc5d4e
-AnalyticsRules/PSOC - Suspicious usage of bcdedit.json,0e5dac067ade01eea08bd89625d78418e9775c67
-AnalyticsRules/PSOC - Tunneling Tool ligolo-ng Detected on Windows Hosts.json,f9b6f98e97291cad21e45d4270cfa84d410c778c
-AnalyticsRules/PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE.json,96d438c7934d534927b7a8cfd4097cd009ce769f
-AnalyticsRules/PSOC - Detects suspicious execution of fsutil.exe.json,735ad2a246d9ad277ff1203dfa3a698f1d3ccc8f
-AnalyticsRules/PSOC - Suspicious wevtutil Usage.json,af119c3bba998b991d12291cee1154db7ca4b9e7
+AnalyticsRules/PSOC - Suspicious Reg Add BitLocker via reg.exe.json,28ae2ac03ab985b0117e9b922c33fe9bdbea76b5
 AnalyticsRules/PSOC - Possible Hoaxshell activity detected.json,6c31dd847fc5a6afc7c559af6fe4427d31ed4518
-AnalyticsRules/PSOC - Potential Impacket Lateral Movement Activity.json,9a39fdc4cd1cbe030f50f42243acc9aefef695b3
-AnalyticsRules/PSOC - Suspicious Use of attrib.exe to Hide Files.json,0bce3ee5831582584bd54ecd98e305eb0a214b9b
-AnalyticsRules/PSOC - Suspicious Command Line Containing Right-to-Left Override.json,c10a657f6519106a597c3c45d8e2d941db8be71f
-AnalyticsRules/PSOC - OFFICE 365 New Inbox Rule - MoveToFolder RSS or Archive or Conversation History.json,b8593bc265855fb439a6d99a3e9621cc4f1ef42a
 AnalyticsRules/PSOC - Suspicious Nslookup usage using Powershell.json,edb5b2aea9a6cf92409afb1cbd4f42a7faee6161
-AnalyticsRules/PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs.json,9da0fc5aa444a933b4da01639741f2d5d6a0f715
-AnalyticsRules/PSOC - Potential Compromise of Safeboot Registry key.json,f0d80f3f8ac766cbafe9ab0b387f613e7e7b7649
-AnalyticsRules/PSOC - Suspicious usage of WMI.json,6cd569ffd219ec893f4f10bed0391de0eaf26119
+AnalyticsRules/PSOC - Suspicious usage of Cobalt Strike psexec command.json,33e8c637bf90f486f69e05b765e85d5ff2b23904
+AnalyticsRules/PSOC - Detects usage of AppLocker enumeration.json,e395cf197745673a7006d591d9c227b033cd8a44
+AnalyticsRules/PSOC - Kerberos spn request using GetUserSPNs.py script.json,90f7728cc294fb27d2ef10ca2e65f086305dd607
+AnalyticsRules/PSOC - Suspicious usage of bcdedit.json,0e5dac067ade01eea08bd89625d78418e9775c67
+AnalyticsRules/PSOC - Tunneling Tool Execution.json,87bde5733524158f2e9d0f90d3abde3de3b60480
+AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Suspicious Delete.json,a3b5df096b13b0191fc582d1948d71ca15472001
+AnalyticsRules/PSOC - Suspicious wermgr.exe Parent Process with Known MiniPlasma exploit.json,255adb10cbc21c8cf53faf3dd0b6f7fcc77bf66e
+AnalyticsRules/PSOC - PowerShell O365 Audit commands.json,5a07c8e9fe00ae4e86e4973642c651aa8dad4561
+AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Mail Forward.json,6e76e6e23ddf3bcd2b1410f0ca698660b3e43672
+AnalyticsRules/PSOC - LSA Protection Bypass.json,4685564d23252be1bf0666c46e97d77775a7a91c
 AnalyticsRules/PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation.json,52fa82634374bf3877cf382d5abe29e5417bde87
 AnalyticsRules/PSOC - OFFICE 365 - New Inbox Rule to Auto Delete Email.json,406d4fbfffe51137bb70579405f776f24d7fe35d
-AnalyticsRules/PSOC - Detects suspicious execution of Sysinternals PsSuspend.json,29bf7ac1607a992a027df78158d61d00a7f9e9f3
-AnalyticsRules/PSOC - Detects potentially suspicious child processes of KeyScrambler.exe.json,08c06e2fa7971f2ed426ccdb361ef9d4222006d8
-AnalyticsRules/PSOC - Possible credential dumping using Silent Process Exit (via registry).json,6f0ff6a8023dc13f4f6d2302a8830a5839512775
-AnalyticsRules/PSOC - Suspicious OS Credential Dumping using NTDS.json,53b259968ef1bf40c37569a072d1eefe27bdcf16
-AnalyticsRules/PSOC - Suspicious Registry created by Dragonforce ransomware.json,f18e91b50a98b190bcf4a648ed0ff3f8396a0335
-AnalyticsRules/PSOC - Suspicious Reg Add BitLocker via reg.exe.json,28ae2ac03ab985b0117e9b922c33fe9bdbea76b5
-AnalyticsRules/PSOC - MiniPlasma WERPipe Named Pipe Access.json,a59269952727563d25c98f509200a7a2a4f84120
-AnalyticsRules/PSOC - Suspicious PowerShell Download Cradle.json,02e2f897a9ee00c6909a737e9d3b601189e330fb
-AnalyticsRules/PSOC - Enable Remote Connection Between Anonymous Computer.json,aa266ac45c8da99c8d31f2d1d30e437d58c997ca
-AnalyticsRules/PSOC - Detects Powershell constrained language (CLM) bypass.json,3a9b5d73fdab3259b4ab6d6fcdb89b019b3aaebb
-AnalyticsRules/PSOC - PowerShell O365 Audit commands.json,5a07c8e9fe00ae4e86e4973642c651aa8dad4561
-AnalyticsRules/PSOC - Potentially Suspicious Electron Application CommandLine.json,eeaf0df0f6d3536b932281b2722b3412b58de6d0
-AnalyticsRules/PSOC - Windows Port Forwarding Activity Via SSH.EXE.json,4726ed33f77ead780065c657573046992cf69fb5
-AnalyticsRules/PSOC - UAC bypass via Fodhelper.json,52e3e2f392d10f99e4e37eca60b318e09d19bed0
-AnalyticsRules/PSOC - Fsutil Behavior Set SymlinkEvaluation.json,4122752a48e34b65f8eaf3be129eb5cd664efd9e
-AnalyticsRules/PSOC - Suspicious Security Service Disabled.json,20193b0c6c54638ec2fbb8243bc8510e431c2b67
-AnalyticsRules/PSOC - Sentinel Monitoring Services Down.json,8fe966d38ac6d2c5f76ff1b8ae8b6bd3709adb89
-AnalyticsRules/PSOC - Detects suspicious windows cached domain credentials reg query.json,15add2d59d88303adb8f76a98c53526525f729db
-AnalyticsRules/PSOC - Detects suspicious child processes of the Microsoft OneNote application.json,8162ead2fcccd74649af33087be24e69a011becf
-AnalyticsRules/PSOC - Potential Shadow Credentials added to AD Object.json,00a0b83b7994fae5236788e7ccc30347af0ffc62
-AnalyticsRules/PSOC - Tunneling Tool Execution.json,87bde5733524158f2e9d0f90d3abde3de3b60480
-AnalyticsRules/PSOC - LSA Protection Bypass.json,4685564d23252be1bf0666c46e97d77775a7a91c
-AnalyticsRules/PSOC - Suspicious usage of Cobalt Strike psexec command.json,33e8c637bf90f486f69e05b765e85d5ff2b23904
-AnalyticsRules/PSOC - Rule for Suspicious Certutil Commands usage.json,ca7c42aa4ced7f569c58ec76a588051ac3d9e3f6
-AnalyticsRules/PSOC - Suspicious execution of Kapeka Backdoor.json,ed75b94c21b6260a8e59074cb69737994793c653
-AnalyticsRules/PSOC - Suspicious remote wmi command attempt.json,0e833d693cf0cd8b4b5e4ee4e7be3b26f1942a28
-AnalyticsRules/PSOC - Suspicious wermgr.exe Parent Process with Known MiniPlasma exploit.json,255adb10cbc21c8cf53faf3dd0b6f7fcc77bf66e
-AnalyticsRules/PSOC- Suspicious Entra ID Token Request for Device Registration Service.json,6526bf56277c9929c6aa12ecc3d0aa854e857d18
-AnalyticsRules/PSOC - Suspicious disabling of AntiVirus via net command.json,c73c24cbf6b160d4499eb145903bfe30d0292f4f
-AnalyticsRules/PSOC - Sensitive File Dump Via Wbadmin.EXE.json,bdac977fb3c03d73557f9f89839e9a43b1a21f11
-AnalyticsRules/PSOC - Suspicious usage of lazagne tool via commandline.json,e47c038bf8e5d7f3dd633b9be918814891ebe3ec
-AnalyticsRules/PSOC - Possible Uninstalling of Antiviruses.json,a6330695050ae9f0a934f650cd500d05682a8850
-AnalyticsRules/PSOC - New Enumeration tool was installed.json,a47c3a533a9ffd5bfa166bed2912578570c1fffe
-AnalyticsRules/PSOC - Detects usage of AppLocker enumeration.json,e395cf197745673a7006d591d9c227b033cd8a44
-AnalyticsRules/PSOC - Potential Persistence Via Logon Scripts - Registry.json,ba72349c5bc7766fb5b602c9aeeb79b789a8cfea
-AnalyticsRules/PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters.json,6b740b684ab6ad69b76117685542884a45433000
-AnalyticsRules/PSOC - Suspicious firewall configuration activity.json,b02f6ad1417473bb56a097e3dde520b34957ce2e
-AnalyticsRules/PSOC - Windows Credential Manager activity detected.json,b5f7bfbcabc201702817d74bf298b8a894dfc543
-AnalyticsRules/PSOC - Remote Access Tool - MeshAgent Command Execution via MeshCentral.json,f3b4b85dd720d650f1424aab49a803feba9fdcdf
-AnalyticsRules/PSOC - Kerberos spn request using GetUserSPNs.py script.json,90f7728cc294fb27d2ef10ca2e65f086305dd607
-AnalyticsRules/PSOC - WinRM spawning a suspicious child process.json,68680e21d74201fc826584d293becef8f707d132
-AnalyticsRules/PSOC - Suspicious Java Child Process.json,10b9afbae1917a73e8bbf3665d7846724abad6c9
-AnalyticsRules/PSOC - Python Function Execution Security Warning Disabled In Excel.json,e0b00f08e5fd116174683b0036c7d4825954a63c
-AnalyticsRules/PSOC - UAC Notification Disabled.json,0e612bfaa8046ca9286ffc0d9e308980865bac38
-AnalyticsRules/PSOC - Possible  Microsoft Office 0-day vulnerability (CVE-2022-30190) Detected.json,fa0d64ffe1cb940441b85034e2c2dcb431e804d2
-AnalyticsRules/PSOC - Potential Recon Activity Via Nltest.EXE.json,7921be1dfe74729547563cde30cc98707cbe4d8a
-AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Mail Forward.json,6e76e6e23ddf3bcd2b1410f0ca698660b3e43672
-AnalyticsRules/PSOC - Detects suspicious execution of cab files.json,a674c0d7186193099ad626334805f738493a7100
-AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Wget.EXE.json,23527a2784f5f46381ac4c1f4b02cba61dd9aca2
-AnalyticsRules/PSOC - Suspicious process launched by malicious JavaScript.json,7c53a44ea88d0599acf1164c1028f90ce6d4e3c5
-AnalyticsRules/PSOC - Detects execution of Impacket's smbexec.py.json,ea04ab65f80a96b43e5e6f3c71c520ab6d812a45
-AnalyticsRules/PSOC - File Download Via CertOC.exe.json,820b1a1168e71efd1c5bdfa65e5b70cf6f05bc33
 AnalyticsRules/PSOC - WinAD PEAs Privilege Escalation Script Detected.json,9c25221bee0c13211be88dd2559f742cf812df53
-AnalyticsRules/PSOC - LSASS process dumping activity post exploit CVE 2025-29824.json,cf8bb6eda0dc599e0a1ac69ef1f9673d73389cdd
 AnalyticsRules/PSOC - WMImplantCIMplant Detection rule.json,938fe56bfbc963dfaf37aa10e11d459d7cdcdd9d
-AnalyticsRules/PSOC - Dumping of Sensitive Hives via Reg.exe.json,98bd5238707a51de747e03126b80b99494207e16
-AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Curl.EXE.json,2a26fb9e7ea72d39b93da378857bcdd7a6b82084
 AnalyticsRules/PSOC - Office Macros Warning Disabled.json,65a017560e35dd483ef0bbbffd11bff55f7e3451
+AnalyticsRules/PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh.json,cf2ef83eb8f21989bf2eb0077f8bd137d3af0d90
+AnalyticsRules/PSOC - Detects suspicious execution of cab files.json,a674c0d7186193099ad626334805f738493a7100
+AnalyticsRules/PSOC - UAC Notification Disabled.json,0e612bfaa8046ca9286ffc0d9e308980865bac38
+AnalyticsRules/PSOC - WinRM spawning a suspicious child process.json,68680e21d74201fc826584d293becef8f707d132
+AnalyticsRules/PSOC - Potential Persistence Via Logon Scripts - Registry.json,ba72349c5bc7766fb5b602c9aeeb79b789a8cfea
+AnalyticsRules/PSOC - OFFICE 365 New Inbox Rule - MoveToFolder RSS or Archive or Conversation History.json,b8593bc265855fb439a6d99a3e9621cc4f1ef42a
+AnalyticsRules/PSOC - Suspicious Command Line Containing Right-to-Left Override.json,c10a657f6519106a597c3c45d8e2d941db8be71f
+AnalyticsRules/PSOC - Possible  Microsoft Office 0-day vulnerability (CVE-2022-30190) Detected.json,fa0d64ffe1cb940441b85034e2c2dcb431e804d2
+AnalyticsRules/PSOC - New Enumeration tool was installed.json,a47c3a533a9ffd5bfa166bed2912578570c1fffe
+AnalyticsRules/PSOC - print.exe binary to copy credential files.json,87b55f68ccce13a54f5c3377fec9d312c8ef4418
+AnalyticsRules/PSOC - Suspicious remote wmi command attempt.json,0e833d693cf0cd8b4b5e4ee4e7be3b26f1942a28
+AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Curl.EXE.json,2a26fb9e7ea72d39b93da378857bcdd7a6b82084
+AnalyticsRules/PSOC - Detects suspicious windows cached domain credentials reg query.json,15add2d59d88303adb8f76a98c53526525f729db
+AnalyticsRules/PSOC - Potential Compromise of Safeboot Registry key.json,f0d80f3f8ac766cbafe9ab0b387f613e7e7b7649
+AnalyticsRules/PSOC - Suspicious Use of attrib.exe to Hide Files.json,0bce3ee5831582584bd54ecd98e305eb0a214b9b
+AnalyticsRules/PSOC - Suspicious command to list Anti-Virus product installed.json,5ea6324c08817b962548676285a767709746f5e3
+AnalyticsRules/PSOC - Potential Impacket Lateral Movement Activity.json,9a39fdc4cd1cbe030f50f42243acc9aefef695b3
+AnalyticsRules/PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs.json,9da0fc5aa444a933b4da01639741f2d5d6a0f715
+AnalyticsRules/PSOC - Suspicious firewall configuration activity.json,b02f6ad1417473bb56a097e3dde520b34957ce2e
+AnalyticsRules/PSOC - Detects suspicious execution of Sysinternals PsSuspend.json,29bf7ac1607a992a027df78158d61d00a7f9e9f3
+AnalyticsRules/PSOC - Suspicious PowerShell Download Cradle.json,02e2f897a9ee00c6909a737e9d3b601189e330fb
+AnalyticsRules/PSOC - Python Function Execution Security Warning Disabled In Excel.json,e0b00f08e5fd116174683b0036c7d4825954a63c
+AnalyticsRules/PSOC - Detects execution of Impacket's smbexec.py.json,ea04ab65f80a96b43e5e6f3c71c520ab6d812a45
+AnalyticsRules/PSOC - Detects Powershell constrained language (CLM) bypass.json,3a9b5d73fdab3259b4ab6d6fcdb89b019b3aaebb
+AnalyticsRules/PSOC - Suspicious usage of WMI.json,6cd569ffd219ec893f4f10bed0391de0eaf26119
+AnalyticsRules/PSOC - Suspicious disabling of AntiVirus via net command.json,c73c24cbf6b160d4499eb145903bfe30d0292f4f
+AnalyticsRules/PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters.json,6b740b684ab6ad69b76117685542884a45433000
+AnalyticsRules/PSOC - Detects suspicious execution of fsutil.exe.json,735ad2a246d9ad277ff1203dfa3a698f1d3ccc8f
+AnalyticsRules/PSOC - Possible persistence via registry key detected.json,43bd192765f60927c1df88c23f0206047a94f752
+AnalyticsRules/PSOC - Suspicious Security Service Disabled.json,20193b0c6c54638ec2fbb8243bc8510e431c2b67
+AnalyticsRules/PSOC - Suspicious OS Credential Dumping using NTDS.json,53b259968ef1bf40c37569a072d1eefe27bdcf16
+AnalyticsRules/PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE.json,96d438c7934d534927b7a8cfd4097cd009ce769f
+AnalyticsRules/PSOC - Dumping of Sensitive Hives via Reg.exe.json,98bd5238707a51de747e03126b80b99494207e16
+AnalyticsRules/PSOC - MiniPlasma WERPipe Named Pipe Access.json,a59269952727563d25c98f509200a7a2a4f84120
+AnalyticsRules/PSOC - UAC bypass via Fodhelper.json,52e3e2f392d10f99e4e37eca60b318e09d19bed0
+AnalyticsRules/PSOC - PowerDrop Malware Strings.json,b04adad977f6740bfdf70ff720b52d076bfec3d5
+AnalyticsRules/PSOC - Suspicious wevtutil Usage.json,af119c3bba998b991d12291cee1154db7ca4b9e7
+AnalyticsRules/PSOC - Possible windows defender disable activity.json,f660647a17fbec4392f4ca77d6f401ddb142d4de
+AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Wget.EXE.json,23527a2784f5f46381ac4c1f4b02cba61dd9aca2
+AnalyticsRules/PSOC - Windows Port Forwarding Activity Via SSH.EXE.json,4726ed33f77ead780065c657573046992cf69fb5
+AnalyticsRules/PSOC - Suspicious process launched by malicious JavaScript.json,7c53a44ea88d0599acf1164c1028f90ce6d4e3c5
+AnalyticsRules/PSOC - Fsutil Behavior Set SymlinkEvaluation.json,4122752a48e34b65f8eaf3be129eb5cd664efd9e
+AnalyticsRules/PSOC - Detects potentially suspicious child processes of KeyScrambler.exe.json,08c06e2fa7971f2ed426ccdb361ef9d4222006d8
+AnalyticsRules/PSOC - Suspicious Windows defender logging disable.json,4ac60b8c60656f7cc4ad152203e153c6ab7b9f7f
+AnalyticsRules/PSOC - Scheduled Task creation during Non Business Hours.json,00cb66af92044370366c9325559a1ec1f8fc5d4e
+AnalyticsRules/PSOC - Remote Access Tool - MeshAgent Command Execution via MeshCentral.json,f3b4b85dd720d650f1424aab49a803feba9fdcdf
+AnalyticsRules/PSOC - Sensitive File Dump Via Wbadmin.EXE.json,bdac977fb3c03d73557f9f89839e9a43b1a21f11
+AnalyticsRules/PSOC - Potential Recon Activity Via Nltest.EXE.json,7921be1dfe74729547563cde30cc98707cbe4d8a
+AnalyticsRules/PSOC - Windows Credential Manager activity detected.json,b5f7bfbcabc201702817d74bf298b8a894dfc543
+AnalyticsRules/PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe).json,a1b07e25dfb5678004f8ec9ac280a1b531a6789a
+AnalyticsRules/PSOC - Tunneling Tool ligolo-ng Detected on Windows Hosts.json,f9b6f98e97291cad21e45d4270cfa84d410c778c
+AnalyticsRules/PSOC - Suspicious Registry created by Dragonforce ransomware.json,f18e91b50a98b190bcf4a648ed0ff3f8396a0335
+AnalyticsRules/PSOC - Potentially Suspicious Electron Application CommandLine.json,eeaf0df0f6d3536b932281b2722b3412b58de6d0
+AnalyticsRules/PSOC - LSASS process dumping activity post exploit CVE 2025-29824.json,cf8bb6eda0dc599e0a1ac69ef1f9673d73389cdd
+AnalyticsRules/PSOC - Potential KamiKakaBot Activity - Lure Document Execution.json,71a74c81871fdfa138639c8b508f33d98346e0f7
+AnalyticsRules/PSOC - Possible credential dumping using Silent Process Exit (via registry).json,6f0ff6a8023dc13f4f6d2302a8830a5839512775
+AnalyticsRules/PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed.json,c0ac9c1a9b4a0aa1bd3a066b74db67b2b8f1a612
+AnalyticsRules/PSOC - Sentinel Monitoring Services Down.json,8fe966d38ac6d2c5f76ff1b8ae8b6bd3709adb89
+AnalyticsRules/PSOC- Suspicious Entra ID Token Request for Device Registration Service.json,6526bf56277c9929c6aa12ecc3d0aa854e857d18
+AnalyticsRules/PSOC - Rule for Suspicious Certutil Commands usage.json,ca7c42aa4ced7f569c58ec76a588051ac3d9e3f6
+AnalyticsRules/PSOC - Possible Uninstalling of Antiviruses.json,a6330695050ae9f0a934f650cd500d05682a8850
+AnalyticsRules/PSOC - Potential Shadow Credentials added to AD Object.json,00a0b83b7994fae5236788e7ccc30347af0ffc62
+AnalyticsRules/PSOC - Suspicious Java Child Process.json,10b9afbae1917a73e8bbf3665d7846724abad6c9
+AnalyticsRules/PSOC - Enable Remote Connection Between Anonymous Computer.json,aa266ac45c8da99c8d31f2d1d30e437d58c997ca
+AnalyticsRules/PSOC - File Download Via CertOC.exe.json,820b1a1168e71efd1c5bdfa65e5b70cf6f05bc33
+AnalyticsRules/PSOC - Suspicious execution of Kapeka Backdoor.json,ed75b94c21b6260a8e59074cb69737994793c653
+AnalyticsRules/PSOC - Disable Internal Tools or Feature in Registry.json,4c3f2aaa602437304be9c8b92285e3a28a919c1a
+AnalyticsRules/PSOC - Detects suspicious child processes of the Microsoft OneNote application.json,8162ead2fcccd74649af33087be24e69a011becf
+AnalyticsRules/PSOC - Suspicious usage of lazagne tool via commandline.json,e47c038bf8e5d7f3dd633b9be918814891ebe3ec
 
