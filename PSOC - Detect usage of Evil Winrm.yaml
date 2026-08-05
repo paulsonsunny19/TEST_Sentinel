@@ -1,0 +1,58 @@
+﻿id: b9d30f12-71c0-4d88-8a08-98e5e62b193c
+name: PSOC - Detect usage of Evil Winrm
+kind: Scheduled
+description: detects evil winrm lateral movement
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- LateralMovement
+relevantTechniques:
+- T0886
+query: |-
+  //detects evil winrm lateral movement
+  let cmd_all = dynamic(["Invoke-Expression","(get-location).path","C:\\Windows\\system32\\wsmprovhost.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any="powershell.exe",commandline_has_all=cmd_all)
+  | where CommandLine contains "C:\\Users" and CommandLine contains "Documents"
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

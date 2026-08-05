@@ -1,0 +1,65 @@
+﻿id: 0678c31e-3733-4d90-8d6a-176380bd936a
+name: PSOC - 7Zip Compressing Dump Files
+kind: Scheduled
+description: |
+  Detects compression of memory dump files (.dmp, .dump, .hdmp) using 7-Zip binaries,
+  which may indicate credential extraction activity.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - CredentialAccess
+relevantTechniques:
+  - T1003
+query: |
+  // Schema-safe detection for 7zip compression of dump files
+  SecurityEvent
+  | where EventID == 4688
+  | extend
+      Account = coalesce(
+          column_ifexists("SubjectUserName", ""),
+          column_ifexists("Account", "")
+      ),
+      AccountDomain = column_ifexists("SubjectDomainName", ""),
+      Computer = column_ifexists("Computer", ""),
+      NewProcessName = column_ifexists("NewProcessName", ""),
+      NewProcessId = tostring(column_ifexists("NewProcessId", "")),
+      ParentProcessName = column_ifexists("ParentProcessName", ""),
+      CommandLine = column_ifexists("CommandLine", "")
+  | extend NewProcessNameLower = tolower(NewProcessName)
+  | where NewProcessNameLower has_any ("7z.exe", "7zr.exe", "7za.exe")
+  | where CommandLine has_any (".dmp", ".dump", ".hdmp")
+  | where isnotempty(CommandLine)
+entityMappings:
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: Account
+      - identifier: NTDomain
+        columnName: AccountDomain
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: Computer
+  - entityType: Process
+    fieldMappings:
+      - identifier: ProcessId
+        columnName: NewProcessId
+      - identifier: CommandLine
+        columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

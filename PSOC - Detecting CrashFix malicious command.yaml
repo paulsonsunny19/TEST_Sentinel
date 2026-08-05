@@ -1,0 +1,59 @@
+﻿id: 0fe20175-4735-4f75-950f-2d9204732eaf
+name: PSOC - Detecting CrashFix malicious command
+kind: Scheduled
+description: The command can fetch data from remote servers and pipe the output directly to the command line. In this case, the malicious command copies finger.exe from System32 to the %temp% directory (renaming it to ct.exe to avoid detection), then uses it to connect to a remote IP and pipes the response directly to cmd, executing whatever payload the attacker's server returns.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1036.003
+query: |-
+  //Detecting CrashFix malicious command
+  SecurityEvent
+  | where Process has_any ("cmd.exe", "powershell.exe")
+  | where CommandLine has_all ("start","min","copy")
+  | where CommandLine has_all ("ct.exe","finger.exe")
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      ProcessId = tostring(column_ifexists("NewProcessId", "")),
+      CommandLineMapped = tostring(column_ifexists("CommandLine", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

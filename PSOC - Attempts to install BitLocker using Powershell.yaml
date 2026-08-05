@@ -1,0 +1,64 @@
+﻿id: e75bb1f4-ff99-4451-aaa2-eb41a1259291
+name: PSOC - Attempts to install BitLocker using Powershell
+kind: Scheduled
+description: |-
+  Detects the installation of bitlocker using powershell
+  attackers might do this in order to encrpyt files
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Impact
+relevantTechniques:
+- T1486
+query: |-
+  // Detects the installation of bitlocker
+  // attackers might do this in order to encrpyt files
+  let cmd_all = dynamic(["Install-Windows-Feature","Bitlocker","IncludeAllSubFeature"]);
+  _Im_ProcessCreate(commandline_has_all=cmd_all,targetprocess_has_any="powershell.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: DvcIpAddr
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

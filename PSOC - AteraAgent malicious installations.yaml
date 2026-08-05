@@ -1,0 +1,65 @@
+﻿id: 74061d0c-8037-47fa-96fe-4e8a1f5eb55d
+name: PSOC - AteraAgent malicious installations
+kind: Scheduled
+description: |-
+  Detects the installation of Atera from free email accounts rather than company email accounts.
+  This was captured in real incidents where threat actors carried this out to gain access.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1059
+query: |-
+  // Detects the installation of Atera from free email accounts rather than company email accounts.
+  // This was captured in real incidents where threat actors carried this out to gain access.
+  let cmd_all = dynamic(["/i","IntegratorLogin="]);
+  let cmd_any = dynamic(["gmail.com","yahoo.com","@hotmail.com","@yandex.ru","@mail.ru","@protonmail.com","@dropmail.me"]);
+  _Im_ProcessCreate(commandline_has_all=cmd_all,commandline_has_any=cmd_any,targetprocess_has_any="AteraAgent.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: DvcIpAddr
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

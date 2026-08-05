@@ -1,0 +1,52 @@
+﻿id: 4b867d41-5a25-4754-b263-1f9156bf6a2a
+name: PSOC - Brute Force Attempt on Forti SSL-VPN
+kind: Scheduled
+description: |-
+  This detects multiple failed logins to the SSL VPN (50 in 1 hour).
+  This indicates brute force activity, and the Source IP should be blocked
+severity: Medium
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1110
+query: |-
+  // rule detects brute force attacks on Forti-VPNs
+  // first check for any IP with more than 50 failed login events
+  let brute_force_ips = CommonSecurityLog
+  | where Message == "SSL user failed to logged in"
+  | summarize FailedLogins = count() by DestinationIP
+  | where FailedLogins > 50;
+  // now check for logs from that IP and show the usernames it is attempting
+  CommonSecurityLog
+  | where DestinationIP in (brute_force_ips)
+  | project SourceIP = DestinationIP, Username = DestinationUserName
+  | summarize count() by SourceIP,Username
+  | order by count_
+entityMappings:
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Username
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

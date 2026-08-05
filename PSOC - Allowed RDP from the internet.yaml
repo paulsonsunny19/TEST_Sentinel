@@ -1,0 +1,48 @@
+﻿id: 0ddf3c79-05da-4479-899c-26a9ab82af7a
+name: PSOC - Allowed RDP from the internet
+kind: Scheduled
+description: |
+  Detects inbound allowed RDP (port 3389) connections originating from public IP addresses,
+  indicating potential exposure of systems to the internet.
+severity: Medium
+queryFrequency: 30m
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - InitialAccess
+relevantTechniques:
+  - T0822
+query: |
+  // ASIM-based detection of allowed inbound RDP from public IPs
+  _Im_NetworkSession(dstportnumber = 3389, dvcaction = 'allow')
+  | extend
+      SrcIp = tostring(column_ifexists("Src", "")),
+      DstIp = tostring(column_ifexists("Dst", "")),
+      DstPort = tostring(column_ifexists("DstPortNumber", ""))
+  | where isnotempty(SrcIp)
+  | where ipv4_is_private(SrcIp) == false
+  | where isnotempty(DstIp)
+entityMappings:
+  - entityType: IP
+    fieldMappings:
+      - identifier: Address
+        columnName: SrcIp
+  - entityType: IP
+    fieldMappings:
+      - identifier: Address
+        columnName: DstIp
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

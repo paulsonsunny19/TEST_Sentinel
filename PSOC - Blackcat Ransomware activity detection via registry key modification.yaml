@@ -1,0 +1,70 @@
+﻿id: ab1f8374-8b8f-41c8-b73b-efafe103afa0
+name: PSOC - Blackcat Ransomware activity detection via registry key modification
+kind: Scheduled
+description: |-
+  Detects BlackCat ransomware activity
+  The specific registry commands detected are used by BlackCat ransomware
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1112
+query: |-
+  // Service Ticket #4231548 - Sentinel - Cover Windows Registry ControlSet00x in addition to CurrentControlSet
+  // Detects BlackCat ransomware activity
+  // The specific registry commands detected are used by BlackCat ransomware
+  let cmd_all = dynamic(["reg","add"]);
+  let cmd_any = dynamic([
+    "\\SYSTEM\\ControlSet001\\Services\\LanmanServer\\Parameters /v MaxMpxCt /d 65535 /t REG_DWORD /f",
+    "\\SYSTEM\\ControlSet001\\Control\\Lsa /v DisableRestrictedAdmin /t REG_DWORD /d 0",
+    "\\SYSTEM\\ControlSet002\\Services\\LanmanServer\\Parameters /v MaxMpxCt /d 65535 /t REG_DWORD /f",
+    "\\SYSTEM\\ControlSet002\\Control\\Lsa /v DisableRestrictedAdmin /t REG_DWORD /d 0",
+    "\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters /v MaxMpxCt /d 65535 /t REG_DWORD /f",
+    "\\SYSTEM\\CurrentControlSet\\Control\\Lsa /v DisableRestrictedAdmin /t REG_DWORD /d 0",
+    "\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced /v Hidden /t REG_DWORD /d 1 /f"
+  ]);
+  _Im_ProcessCreate(commandline_has_all=cmd_all,commandline_has_any=cmd_any)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

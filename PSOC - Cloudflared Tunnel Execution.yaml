@@ -1,0 +1,62 @@
+﻿id: 3b359894-d433-4346-9ae9-2bab1f13687a
+name: PSOC - Cloudflared Tunnel Execution
+kind: Scheduled
+description: |-
+  Detects the execution of a cloudlfared tunnel.
+  This has legitimate uses, but has been seen used by threat actors.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CommandAndControl
+relevantTechniques:
+- T1090
+- T1572
+query: |-
+  // Detects the execution of a cloudlfared tunnel.
+  // This has legitimate uses, but has been seen used by threat actors.
+  let cmd_all = dynamic(["tunnel"]);
+  let cmd_any = dynamic(["config","credentials-tokens","credentials-file","token"]);
+  _Im_ProcessCreate(commandline_has_all=cmd_all,commandline_has_any=cmd_any,targetprocess_has_any="cloudflared")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

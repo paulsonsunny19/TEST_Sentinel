@@ -1,0 +1,71 @@
+﻿id: 5e476b0e-adfb-481f-ba98-95344d613f17
+name: PSOC - Detects the use of getsystem Meterpreter
+kind: Scheduled
+description: |
+  Detects the use of the getsystem Meterpreter command by identifying suspicious
+  service-based process execution patterns involving cmd.exe and pipe-based command execution.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - PrivilegeEscalation
+relevantTechniques:
+  - T1134.001
+  - T1134.002
+query: |
+  // Normalised, schema-safe detection for Meterpreter getsystem behaviour
+  SecurityEvent
+  | where EventID == 4688
+  | extend
+      Account = coalesce(
+          column_ifexists("SubjectUserName", ""),
+          column_ifexists("Account", "")
+      ),
+      AccountDomain = column_ifexists("SubjectDomainName", ""),
+      Computer = column_ifexists("Computer", ""),
+      NewProcessName = column_ifexists("NewProcessName", ""),
+      NewProcessId = tostring(column_ifexists("NewProcessId", "")),
+      ParentProcessName = column_ifexists("ParentProcessName", ""),
+      CommandLine = column_ifexists("CommandLine", "")
+  | where CommandLine has_all ("/c", "echo", "pipe")
+  | where CommandLine has_any ("cmd", "%COMSPEC%")
+  | where ParentProcessName =~ "services.exe"
+  | where isnotempty(CommandLine)
+  | extend AccountFull = iff(
+      isempty(AccountDomain),
+      Account,
+      strcat(AccountDomain, "\\", Account)
+  )
+entityMappings:
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: Account
+      - identifier: NTDomain
+        columnName: AccountDomain
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: Computer
+  - entityType: Process
+    fieldMappings:
+      - identifier: ProcessId
+        columnName: NewProcessId
+      - identifier: CommandLine
+        columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

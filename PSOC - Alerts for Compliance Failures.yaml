@@ -1,0 +1,58 @@
+﻿id: 859f0c5f-4cf8-42e7-84ca-0a5e0da5355e
+name: PSOC - Alerts for Compliance Failures
+kind: Scheduled
+description: rule to create tickets for compliance failures
+severity: Medium
+requiredDataConnectors:
+  - connectorId: AzureSecurityBenchmark
+    dataTypes:
+      - SecurityRecommendation
+      - SecurityRegulatoryCompliance
+queryFrequency: 7d
+queryPeriod: 7d
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Discovery
+relevantTechniques:
+- T1082
+query: |-
+  let Recommendations = 
+      SecurityRecommendation
+      | summarize arg_max(TimeGenerated, *) by RecommendationName;
+  SecurityRegulatoryCompliance
+  | join kind=fullouter Recommendations on RecommendationName
+  | where ComplianceStandard in ("NIST-SP-800-53-R5", "CIS-Azure-Foundations-v2.0.0")
+  | where State == "Failed"
+  | where RecommendationState == "Unhealthy"
+  | summarize arg_max(TimeGenerated, *) by RecommendationName
+  | extend Affected_Resource = parse_json(tostring(Properties1.resourceDetails)).resourceName
+  | project
+      RecommendationName,
+      Description,
+      RecommendationState,
+      State,
+      RecommendationSeverity,
+      RecommendationLink,
+      Affected_Resource
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDisplayNameFormat: 'Compliance Failure {{RecommendationName}} '
+  alertDescriptionFormat: |-
+    Severity:: {{RecommendationSeverity}} affecting resource:: {{Affected_Resource}}  
+    Investigate and remediate using {{RecommendationLink}} for further information.
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: AlertPerResult
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

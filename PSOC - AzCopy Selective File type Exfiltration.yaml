@@ -1,0 +1,58 @@
+﻿id: 6a427775-d111-47f3-a416-63264b8d3dd1
+name: PSOC- AzCopy Selective File type Exfiltration
+kind: Scheduled
+description: Detects execution of AzCopy with file selection parameters that may indicate targeted data transfer or potential exfiltration of sensitive files.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1059.003
+query: |-
+  // Detects execution of AzCopy with file selection parameters that may indicate targeted data transfer or potential exfiltration of sensitive files.
+  DeviceProcessEvents
+  | where Timestamp > ago(1d)
+  | where FileName has "azcopy"
+  | where ProcessCommandLine has_any ("--include-pattern","--include-after","--recursive")
+  | where ProcessCommandLine has_any (".zip",".pst",".bak",".sql",".docx",".xlsx",".pdf",".xlsm",".xlsb",".xltx",".csv",".doc",".rtf",".ppt",".pps",".sqlite",".mdb",".accdb","..QBW",".QBB",".QBA",".QBY",".QBX",".qbw",".qbb",".qbm",".qba",".qby",".qbx")
+  | where ProcessCommandLine has "http"
+  //| project Timestamp, DeviceName, AccountUpn = InitiatingProcessAccountUpn, ProcessCommandLine
+  | extend
+      Computer = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("InitiatingProcessAccountName", "")),
+      ProcessId = tostring(column_ifexists("ProcessId", "")),
+      CommandLine = tostring(column_ifexists("ProcessCommandLine", ""))
+  | where isnotempty(Computer)
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

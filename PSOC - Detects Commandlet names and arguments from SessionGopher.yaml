@@ -1,0 +1,57 @@
+﻿id: 64669eec-a9c4-4a12-b58a-4e4e0b396384
+name: PSOC - Detects Commandlet names and arguments from SessionGopher
+kind: Scheduled
+description: detections sessiongopher, a credential harvesting tool
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1552
+query: |-
+  //detections sessiongopher, a credential harvesting tool
+  let cmd_all = dynamic(["$PuTTYPathEnding = \"\\SOFTWARE\\SimonTatham\\PuTTY\\Sessions\"","$WinSCPPathEnding = \"\\SOFTWARE\\Martin Prikryl\\WinSCP 2\\Sessions\"","$RDPPathEnding = \"\\SOFTWARE\\Microsoft\\Terminal Server Client\\Servers\"","Write-Host \"Digging on\"(Hostname)","Write-Host \"Digging on\" $RemoteComputer"]);
+  _Im_ProcessCreate(targetprocess_has_any="powershell.exe",commandline_has_all=cmd_all)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

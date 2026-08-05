@@ -1,0 +1,62 @@
+﻿id: dff1eda2-05cc-483e-a897-51b19a4350c6
+name: PSOC - Application Removed Via Wmic.EXE
+kind: Scheduled
+description: |-
+  Detects the user of wmic to uninstall applications
+  This has been seen in attackes where the attacker removes security applications.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1047
+query: |-
+  // Detects the user of wmic to uninstall applications
+  // This has been seen in attackes where the attacker removes security applications.
+  let ProcessNames = dynamic(["wmic.exe"]);
+  let parent_processes = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all = dynamic(["product where name","call","uninstall"]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames,parentprocess_has_any=parent_processes,commandline_has_all=cmd_all)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

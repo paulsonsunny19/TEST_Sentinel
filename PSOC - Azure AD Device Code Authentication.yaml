@@ -1,0 +1,50 @@
+﻿id: 9b3abf42-9015-4cfd-ba5f-2f96296bc5a2
+name: PSOC - Azure AD Device Code Authentication
+kind: Scheduled
+description: |-
+  Rule for the Azure Device Code Phishing attacks, which can lead to Azure Account Take-Over (ATO). It leverages Azure AD SignInLogs to detect suspicious authentication requests using the device code authentication protocol. 
+  This activity is significant as it indicates potential bypassing of Multi-Factor Authentication (MFA) and Conditional Access Policies (CAPs) through phishing emails. If confirmed malicious, attackers could gain unauthorized access to Azure AD, Exchange mailboxes, and Outlook Web Application (OWA), leading to potential data breaches and unauthorized data access.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- PrivilegeEscalation
+- Persistence
+relevantTechniques:
+- T1098.005
+query: |-
+  SigninLogs // Filter only successful sign-ins
+  | where ResultType == 0
+  | where AuthenticationProtocol == "deviceCode"
+  | extend
+      Account = tostring(column_ifexists("UserPrincipalName", "")),
+      SrcIp = tostring(column_ifexists("IPAddress", "")),
+      AppName = tostring(column_ifexists("AppDisplayName", ""))
+  | where isnotempty(Account)
+  | where isnotempty(SrcIp)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SrcIp
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

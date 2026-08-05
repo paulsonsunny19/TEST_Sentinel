@@ -1,0 +1,61 @@
+﻿id: bfd3fdb6-8bb9-424b-87fd-5e3a4e609213
+name: PSOC - Detects AdFind tool execution used during attacks
+kind: Scheduled
+description: |-
+  Detects the use of AdFind for enumeration
+  This was included in a DFIR report.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Discovery
+relevantTechniques:
+- T1087
+query: |+
+  // Detects the use of AdFind for enumeration
+  // This was included in a DFIR report.
+  let cmd_any = dynamic(["-gcb -sc trustdmp","objectcategory=group","objectCategory=subnet","trustdmp","objectcategory=organizationalUnit","objectcategory=computer","objectcategory=person)","-sc adinfo","-sc domainlist","-sc dcmodes","-sc dclist","-sc computer_pwnnotreqd"]);
+  let ProcessNames = dynamic(["AdFind.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames,commandline_has_any=cmd_any)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

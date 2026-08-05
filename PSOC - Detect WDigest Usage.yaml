@@ -1,0 +1,76 @@
+﻿id: 7515ce3c-0965-4768-9c83-4dfe304cb8ee
+name: PSOC - Detect WDigest Usage
+kind: Scheduled
+description: |-
+  detects the use of wdigest
+  wdigest is insecure and should not be used
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1003
+query: |-
+  //wdigest is insecure and should not be used
+  let Suspicious_WDigest_Authentication = 
+  SecurityEvent
+  | where EventID in (4624, 4776)
+  | extend AuthPackage = case(
+       EventID == 4624, AuthenticationPackageName,
+       EventID == 4776, PackageName,
+      ""
+  )
+  | where AuthPackage =="WDigest";
+  let Suspicious_WDigest_registry_key_changes =
+  _Im_ProcessCreate
+  | where CommandLine has_any (dynamic(["reg add", "REG ADD", "REG.EXE ADD", "reg.exe add"]))
+  | where CommandLine contains @"\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest"
+  | where CommandLine has "UseLogonCredential" 
+  | where CommandLine has "/t Reg_DWORD"
+  | where CommandLine has "/d 1";
+  union isfuzzy=true
+  Suspicious_WDigest_Authentication, Suspicious_WDigest_registry_key_changes
+  | extend
+      Computer = tostring(coalesce(
+          column_ifexists("Computer", ""),
+          column_ifexists("DvcHostname", "")
+      )),
+      Account = tostring(coalesce(
+          column_ifexists("TargetUserName", ""),
+          column_ifexists("ActorUsername", "")
+      )),
+      CommandLine = tostring(column_ifexists("CommandLine", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

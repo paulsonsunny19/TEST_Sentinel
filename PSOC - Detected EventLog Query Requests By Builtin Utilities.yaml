@@ -1,0 +1,67 @@
+﻿id: e28c53cb-2744-4f22-a956-e268173b6826
+name: PSOC - Detected EventLog Query Requests By Builtin Utilities
+kind: Scheduled
+description: Detects various methods of querying the event log which could be legitimate or the recon by an attacker.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1552
+query: |-
+  // This detects suspicious queries of the event log using various methods - servers only
+  let server_device_ids =
+    DeviceInfo 
+    | where TimeGenerated > ago(7d) 
+    | where DeviceType == 'Server'
+    | distinct DeviceId;
+  let cmd_prefilter = dynamic(["Select", "Win32_NTLogEvent","qe", "query-events","ntevent","Get-WinEvent", "get-eventlog"]);
+  _Im_ProcessCreate(commandline_has_any=cmd_prefilter)
+  | where DvcId in (server_device_ids)
+  | where 
+         (                                                               CommandLine has_all (dynamic(["Select", "Win32_NTLogEvent"]))    )
+      or (    TargetProcessName has_any (dynamic(["wevtutil.exe"])) and CommandLine has_any (dynamic(["qe", "query-events"]))           )
+      or (    TargetProcessName has_any (dynamic(["wmic.exe"]))     and CommandLine has_any (dynamic(["ntevent", "query-events"]))      )
+      or (                                                               CommandLine has_any (dynamic(["Get-WinEvent", "get-eventlog"])) )
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
