@@ -1,0 +1,67 @@
+id: 2d7b0e3a-9430-4423-b197-634208c5bbe5
+name: RDP Activity Originating from Unmanaged Device
+description: |
+  Detects RDP activity originating from unmanaged devices by comparing the
+  remote session source against Microsoft Defender onboarded device inventory
+  and an approved device watchlist. This detection helps identify remote
+  access from systems that are not known or managed within the environment.
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+      - DeviceInfo
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - LateralMovement
+relevantTechniques:
+  - T1021
+query: |
+  let InventoryLookback = 30d;
+  let ManagedDevices =
+  DeviceInfo
+  | where Timestamp > ago(InventoryLookback)
+  | summarize arg_max(Timestamp, *) by DeviceId
+  | where OnboardingStatus in ("Onboarded", "Insufficient info")
+  | where isnotempty(DeviceName)
+  | extend NormalizedDevice =
+  tolower(tostring(split(DeviceName, ".")[0]))
+  | distinct NormalizedDevice;
+  let ApprovedDevices =
+  _GetWatchlist('ApprovedRDPSourceDevices')
+  | project ApprovedDevice = tolower(SearchKey);
+  DeviceProcessEvents
+  | where IsInitiatingProcessRemoteSession == true
+  | where isnotempty(InitiatingProcessRemoteSessionDeviceName)
+  | extend SourceDevice =
+  tolower(tostring(split(InitiatingProcessRemoteSessionDeviceName, ".")[0]))
+  | where SourceDevice !in (ManagedDevices)
+  | where SourceDevice !in (ApprovedDevices | project ApprovedDevice)
+  | summarize
+      EventCount = count(),
+      TargetDeviceCount = dcount(DeviceName),
+      TargetDevices = make_set(DeviceName, 20),
+      AccountsUsed = make_set(AccountName, 20),
+      ProcessesExecuted = make_set(FileName, 20),
+      FirstSeen = min(Timestamp),
+      LastSeen = max(Timestamp)
+      by
+      SourceDevice,
+      InitiatingProcessRemoteSessionDeviceName,
+      InitiatingProcessRemoteSessionIP
+  | order by EventCount desc
+entityMappings:
+  - entityType: IP
+    fieldMappings:
+      - identifier: Address
+        columnName: InitiatingProcessRemoteSessionIP
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: SourceDevice
+version: 1.0.0
+kind: Scheduled

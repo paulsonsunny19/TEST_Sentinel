@@ -1,0 +1,78 @@
+id: b858c6fa-b890-4ed3-a6f3-646a23d9ff56
+name: Suspicious Process Execution via RDP Session
+description: |
+  Detects suspicious administrative and post-exploitation tool execution
+  occurring through Remote Desktop Protocol (RDP) sessions using Microsoft
+  Defender for Endpoint remote session enrichment fields.
+  The rule identifies multiple suspicious tools executed from the same
+  remote RDP source device or IP address within a short timeframe. This
+  behavior may indicate unauthorized remote administration, attacker
+  post-exploitation activity, compromised administrator credentials,
+  or human-operated ransomware activity.
+  The detection leverages the following RDP session enrichment fields:
+  - IsInitiatingProcessRemoteSession
+  - InitiatingProcessRemoteSessionIP
+  - InitiatingProcessRemoteSessionDeviceName
+  The rule focuses on identifying combinations of suspicious administrative
+  and native Windows tools executed during RDP sessions.
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Execution
+  - LateralMovement
+relevantTechniques:
+  - T1059
+  - T1021
+query: |
+  let SuspiciousProcesses = dynamic([
+      "psexec.exe",
+      "wmic.exe",
+      "rundll32.exe",
+      "reg.exe",
+      "schtasks.exe",
+      "nltest.exe"
+  ]);
+  let ProcessThreshold = 3;
+  DeviceProcessEvents
+  | where IsInitiatingProcessRemoteSession == true
+  | where isnotempty(InitiatingProcessRemoteSessionIP)
+  | where FileName in~ (SuspiciousProcesses)
+  | summarize
+      DistinctSuspiciousProcesses = dcount(FileName),
+      ExecutedProcesses = make_set(FileName, 20),
+      TotalExecutions = count(),
+      AccountsUsed = make_set(AccountName, 20),
+      TargetDevices = make_set(DeviceName, 20)
+      by
+      InitiatingProcessRemoteSessionIP,
+      InitiatingProcessRemoteSessionDeviceName
+  | where DistinctSuspiciousProcesses >= ProcessThreshold
+  | project
+      Timestamp = now(),
+      InitiatingProcessRemoteSessionIP,
+      InitiatingProcessRemoteSessionDeviceName,
+      DistinctSuspiciousProcesses,
+      TotalExecutions,
+      AccountsUsed,
+      ExecutedProcesses,
+      TargetDevices
+  | order by DistinctSuspiciousProcesses desc
+entityMappings:
+  - entityType: IP
+    fieldMappings:
+      - identifier: Address
+        columnName: InitiatingProcessRemoteSessionIP
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: InitiatingProcessRemoteSessionDeviceName
+version: 1.0.0
+kind: Scheduled

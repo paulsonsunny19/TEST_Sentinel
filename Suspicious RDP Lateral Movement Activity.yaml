@@ -1,0 +1,72 @@
+id: b76406b0-0344-4d1b-930b-9d1b58faad0d
+name: Suspicious RDP Lateral Movement Activity
+description: |
+  Detects potential lateral movement activity through Remote Desktop Protocol (RDP)
+  using Microsoft Defender for Endpoint remote session enrichment fields.
+  The rule identifies remote source devices or IP addresses generating RDP-originated
+  activity across multiple target systems within a one-hour period. This behavior
+  may indicate compromised administrator credentials, unauthorized remote access,
+  human-operated ransomware activity, or attacker lateral movement inside the environment.
+  The detection leverages the following RDP session enrichment fields:
+  - IsInitiatingProcessRemoteSession
+  - InitiatingProcessRemoteSessionIP
+  - InitiatingProcessRemoteSessionDeviceName
+  The rule focuses on identifying RDP fan-out behavior where a single remote source
+  accesses multiple devices within a short timeframe.
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - LateralMovement
+relevantTechniques:
+  - T1021
+query: |
+  let DeviceThreshold = 3;
+  let AllowedSubnets =
+    toscalar(
+        _GetWatchlist('RDPAllowedSubnets')
+        | summarize make_list(SearchKey)
+    );
+  DeviceProcessEvents
+  | where IsInitiatingProcessRemoteSession == true
+  | where isnotempty(InitiatingProcessRemoteSessionIP)
+  // Exclude watchlist subnets
+  | where not(ipv4_is_in_any_range(InitiatingProcessRemoteSessionIP, AllowedSubnets))
+  | summarize
+      TargetDeviceCount = dcount(DeviceName),
+      TargetDevices = make_set(DeviceName, 20),
+      TotalEvents = count(),
+      AccountsUsed = make_set(AccountName, 20),
+      ProcessesExecuted = make_set(FileName, 20)
+      by
+      InitiatingProcessRemoteSessionIP,
+      InitiatingProcessRemoteSessionDeviceName
+  | where TargetDeviceCount >= DeviceThreshold
+  | project
+      Timestamp = now(),
+      InitiatingProcessRemoteSessionIP,
+      InitiatingProcessRemoteSessionDeviceName,
+      TargetDeviceCount,
+      TotalEvents,
+      AccountsUsed,
+      ProcessesExecuted,
+      TargetDevices
+  | order by TargetDeviceCount desc
+entityMappings:
+  - entityType: IP
+    fieldMappings:
+      - identifier: Address
+        columnName: InitiatingProcessRemoteSessionIP
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: InitiatingProcessRemoteSessionDeviceName
+version: 1.0.0
+kind: Scheduled
