@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/Ransomware/LogDeletionUsingWevtutil.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "515d0bba-b297-4f83-8280-20ff7f27ecb1"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Clearing of forensic evidence from event logs using wevtutil",
+        "description": "This query checks for attempts to clear at least 10 log entries from event logs using wevtutil. Clearing event logs can be a sign of ransomware activity, as ransomware often attempts to cover its tracks by deleting logs.\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "// Look for use of wevtutil to clear multiple logs\nDeviceProcessEvents\n| where ProcessCommandLine has \"WEVTUTIL\" and ProcessCommandLine has \"CL\"\n| summarize LogClearCount = dcount(tostring(ProcessCommandLine)), ClearedLogList = make_set(ProcessCommandLine, 100000) by DeviceId, DeviceName, bin(TimeGenerated, 5m)\n| where LogClearCount > 10\n| extend HostName = iff(DeviceName has '.', substring(DeviceName, 0, indexof(DeviceName, '.')), DeviceName)\n| extend DnsDomain = iff(DeviceName has '.', substring(DeviceName, indexof(DeviceName, '.') + 1), \"\")\n",
+        "queryFrequency": "P1D",
+        "queryPeriod": "P1D",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1070"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "FullName",
+                "columnName": "DeviceName"
+              },
+              {
+                "identifier": "HostName",
+                "columnName": "HostName"
+              },
+              {
+                "identifier": "DnsDomain",
+                "columnName": "DnsDomain"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

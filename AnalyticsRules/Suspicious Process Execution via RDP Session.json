@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/Execution/Suspicious Process Execution via RDP Session.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "b858c6fa-b890-4ed3-a6f3-646a23d9ff56"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Suspicious Process Execution via RDP Session",
+        "description": "Detects suspicious administrative and post-exploitation tool execution\noccurring through Remote Desktop Protocol (RDP) sessions using Microsoft\nDefender for Endpoint remote session enrichment fields.\nThe rule identifies multiple suspicious tools executed from the same\nremote RDP source device or IP address within a short timeframe. This\nbehavior may indicate unauthorized remote administration, attacker\npost-exploitation activity, compromised administrator credentials,\nor human-operated ransomware activity.\nThe detection leverages the following RDP session enrichment fields:\n- IsInitiatingProcessRemoteSession\n- InitiatingProcessRemoteSessionIP\n- InitiatingProcessRemoteSessionDeviceName\nThe rule focuses on identifying combinations of suspicious administrative\nand native Windows tools executed during RDP sessions.\n",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "let SuspiciousProcesses = dynamic([\n    \"psexec.exe\",\n    \"wmic.exe\",\n    \"rundll32.exe\",\n    \"reg.exe\",\n    \"schtasks.exe\",\n    \"nltest.exe\"\n]);\nlet ProcessThreshold = 3;\nDeviceProcessEvents\n| where IsInitiatingProcessRemoteSession == true\n| where isnotempty(InitiatingProcessRemoteSessionIP)\n| where FileName in~ (SuspiciousProcesses)\n| summarize\n    DistinctSuspiciousProcesses = dcount(FileName),\n    ExecutedProcesses = make_set(FileName, 20),\n    TotalExecutions = count(),\n    AccountsUsed = make_set(AccountName, 20),\n    TargetDevices = make_set(DeviceName, 20)\n    by\n    InitiatingProcessRemoteSessionIP,\n    InitiatingProcessRemoteSessionDeviceName\n| where DistinctSuspiciousProcesses >= ProcessThreshold\n| project\n    Timestamp = now(),\n    InitiatingProcessRemoteSessionIP,\n    InitiatingProcessRemoteSessionDeviceName,\n    DistinctSuspiciousProcesses,\n    TotalExecutions,\n    AccountsUsed,\n    ExecutedProcesses,\n    TargetDevices\n| order by DistinctSuspiciousProcesses desc\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution",
+          "LateralMovement"
+        ],
+        "techniques": [
+          "T1059",
+          "T1021"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "InitiatingProcessRemoteSessionIP"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "InitiatingProcessRemoteSessionDeviceName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

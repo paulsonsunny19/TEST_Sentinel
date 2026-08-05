@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/Ransomware/MultiProcessKillWithTaskKill.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "4dd31bd5-11a3-4b9c-a7c5-4927ab4f2a77"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Stopping multiple processes using taskkill",
+        "description": "This query checks for attempts to stop at least 10 separate processes using the taskkill.exe utility. This is a common technique used by ransomware to stop security products and other processes.\n",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Find attempts to stop processes using taskkill.exe\nDeviceProcessEvents\n| where FileName =~ \"taskkill.exe\" \n| summarize taskKillCount = dcount(ProcessCommandLine), TaskKillList = make_set(ProcessCommandLine, 10000), \nAccountName = make_set(AccountName, 20),  // adding account name to see the username\nInitiatingProcessParentFileName = make_set(InitiatingProcessParentFileName, 20)  // adding parent file name\nby DeviceId, DeviceName, bin(TimeGenerated, 2m)\n| where taskKillCount > 10\n| extend HostName = iff(DeviceName has '.', substring(DeviceName, 0, indexof(DeviceName, '.')), DeviceName)\n| extend DnsDomain = iff(DeviceName has '.', substring(DeviceName, indexof(DeviceName, '.') + 1), \"\")\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "FullName",
+                "columnName": "DeviceName"
+              },
+              {
+                "identifier": "HostName",
+                "columnName": "HostName"
+              },
+              {
+                "identifier": "DnsDomain",
+                "columnName": "DnsDomain"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

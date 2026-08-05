@@ -1,5 +1,185 @@
 [
   {
+    "source": "Microsoft Defender XDR/AVSpringShell.yaml",
+    "output": "AnalyticsRules/AVSpringShell.json",
+    "ruleId": "3bd33158-3f0b-47e3-a50f-7c20a1b88038",
+    "displayName": "AV detections related to SpringShell Vulnerability"
+  },
+  {
+    "source": "Microsoft Defender XDR/AVTarrask.yaml",
+    "output": "AnalyticsRules/AVTarrask.json",
+    "ruleId": "1785d372-b9fe-4283-96a6-3a1d83cabfd1",
+    "displayName": "AV detections related to Tarrask malware"
+  },
+  {
+    "source": "Microsoft Defender XDR/AVdetectionsrelatedtoUkrainebasedthreats.yaml",
+    "output": "AnalyticsRules/AVdetectionsrelatedtoUkrainebasedthreats.json",
+    "ruleId": "b6685757-3ed1-4b05-a5bd-2cacadc86c2a",
+    "displayName": "AV detections related to Ukraine threats"
+  },
+  {
+    "source": "Microsoft Defender XDR/Campaign/Jupyter-Solarmaker/DeimosComponentExecution.yaml",
+    "output": "AnalyticsRules/DeimosComponentExecution.json",
+    "ruleId": "c25a8cd4-5b4a-45a8-9ba0-3b753a652f6b",
+    "displayName": "Deimos Component Execution"
+  },
+  {
+    "source": "Microsoft Defender XDR/Campaign/Sysrv-botnet/MaliciousCMDExecutionByJava.yaml",
+    "output": "AnalyticsRules/MaliciousCMDExecutionByJava.json",
+    "ruleId": "2c81c0a0-9823-4a14-b21a-2b4acd3335d2",
+    "displayName": "Java Executing cmd to run Powershell"
+  },
+  {
+    "source": "Microsoft Defender XDR/Credential Access/DoppelPaymerProcDump.yaml",
+    "output": "AnalyticsRules/DoppelPaymerProcDump.json",
+    "ruleId": "1be34fb9-f81b-47ae-84fb-465e6686d76c",
+    "displayName": "DopplePaymer Procdump"
+  },
+  {
+    "source": "Microsoft Defender XDR/Credential Access/LSASSCredDumpProcdump.yaml",
+    "output": "AnalyticsRules/LSASSCredDumpProcdump.json",
+    "ruleId": "c332b840-61e4-462e-a201-0e2d69bad45d",
+    "displayName": "LSASS Credential Dumping with Procdump"
+  },
+  {
+    "source": "Microsoft Defender XDR/Defense Evasion/DoppelpaymerStopService.yaml",
+    "output": "AnalyticsRules/DoppelpaymerStopService.json",
+    "ruleId": "5bdc1504-880c-4b30-a39c-7c746535928d",
+    "displayName": "Doppelpaymer Stop Services"
+  },
+  {
+    "source": "Microsoft Defender XDR/Defense Evasion/Regsvr32Rundll32ImageLoadsAbnormalExtension.yaml",
+    "output": "AnalyticsRules/Regsvr32Rundll32ImageLoadsAbnormalExtension.json",
+    "ruleId": "36fbd4e7-5630-4414-aa42-702a7fdded21",
+    "displayName": "Regsvr32 Rundll32 Image Loads Abnormal Extension"
+  },
+  {
+    "source": "Microsoft Defender XDR/Defense Evasion/Regsvr32Rundll32WithAnomalousParentProcess.yaml",
+    "output": "AnalyticsRules/Regsvr32Rundll32WithAnomalousParentProcess.json",
+    "ruleId": "2624fc55-0998-4897-bb48-1c6422befce4",
+    "displayName": "Regsvr32 Rundll32 with Anomalous Parent Process"
+  },
+  {
+    "source": "Microsoft Defender XDR/Discovery/SuspiciousCommandInitiatedByWebServerProcess.yaml",
+    "output": "AnalyticsRules/SuspiciousCommandInitiatedByWebServerProcess.json",
+    "ruleId": "fa2f7d8a-6726-465a-aa72-6f6e3d4c99d7",
+    "displayName": "Detect Suspicious Commands Initiated by Webserver Processes"
+  },
+  {
+    "source": "Microsoft Defender XDR/Execution/BITSAdminActivity.yaml",
+    "output": "AnalyticsRules/BITSAdminActivity.json",
+    "ruleId": "2a1dc4c2-a8d6-4a0e-8539-9b971c851195",
+    "displayName": "Bitsadmin Activity"
+  },
+  {
+    "source": "Microsoft Defender XDR/Execution/OfficeAppsLaunchingWscript.yaml",
+    "output": "AnalyticsRules/OfficeAppsLaunchingWscript.json",
+    "ruleId": "174de33b-107b-4cd8-a85d-b4025a35453f",
+    "displayName": "Office Apps Launching Wscipt"
+  },
+  {
+    "source": "Microsoft Defender XDR/Execution/Suspicious Process Execution via RDP Session.yaml",
+    "output": "AnalyticsRules/Suspicious Process Execution via RDP Session.json",
+    "ruleId": "b858c6fa-b890-4ed3-a6f3-646a23d9ff56",
+    "displayName": "Suspicious Process Execution via RDP Session"
+  },
+  {
+    "source": "Microsoft Defender XDR/Exploits/MosaicLoader.yaml",
+    "output": "AnalyticsRules/MosaicLoader.json",
+    "ruleId": "506f4d6b-3864-4bb1-8f75-a13fb066f97a",
+    "displayName": "MosaicLoader"
+  },
+  {
+    "source": "Microsoft Defender XDR/Impact/AnomalousVoulmeOfFileDeletion.yaml",
+    "output": "AnalyticsRules/AnomalousVoulmeOfFileDeletion.json",
+    "ruleId": "e5f8e196-3544-4a8b-96a9-17c1b6a49710",
+    "displayName": "Unusual Volume of file deletion by users"
+  },
+  {
+    "source": "Microsoft Defender XDR/Lateral Movement/RDP Activity Originating from Unmanaged Device.yaml",
+    "output": "AnalyticsRules/RDP Activity Originating from Unmanaged Device.json",
+    "ruleId": "2d7b0e3a-9430-4423-b197-634208c5bbe5",
+    "displayName": "RDP Activity Originating from Unmanaged Device"
+  },
+  {
+    "source": "Microsoft Defender XDR/Lateral Movement/RemoteFileCreationWithPsExec.yaml",
+    "output": "AnalyticsRules/RemoteFileCreationWithPsExec.json",
+    "ruleId": "35ab0d58-baab-4154-87ed-fa2f69797e9e",
+    "displayName": "Remote File Creation with PsExec"
+  },
+  {
+    "source": "Microsoft Defender XDR/Lateral Movement/ServiceAccountsPerformingRemotePS.yaml",
+    "output": "AnalyticsRules/ServiceAccountsPerformingRemotePS.json",
+    "ruleId": "d29cc957-0ddb-4d00-8d6f-ad1bb345ff9a",
+    "displayName": "Service Accounts Performing Remote PS"
+  },
+  {
+    "source": "Microsoft Defender XDR/Lateral Movement/Suspicious RDP Lateral Movement Activity.yaml",
+    "output": "AnalyticsRules/Suspicious RDP Lateral Movement Activity.json",
+    "ruleId": "b76406b0-0344-4d1b-930b-9d1b58faad0d",
+    "displayName": "Suspicious RDP Lateral Movement Activity"
+  },
+  {
+    "source": "Microsoft Defender XDR/Persistence/AccountCreation.yaml",
+    "output": "AnalyticsRules/AccountCreation.json",
+    "ruleId": "450f4e56-5bba-4070-b9d9-9204ba9d777d",
+    "displayName": "Account Creation"
+  },
+  {
+    "source": "Microsoft Defender XDR/Persistence/LocalAdminGroupChanges.yaml",
+    "output": "AnalyticsRules/LocalAdminGroupChanges.json",
+    "ruleId": "63aa43c2-e88e-4102-aea5-0432851c541a",
+    "displayName": "Local Admin Group Changes"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/DEV-0270/DisableSecurityServiceViaRegistry.yaml",
+    "output": "AnalyticsRules/DisableSecurityServiceViaRegistry.json",
+    "ruleId": "32b29155-3fd3-4a9e-a0ca-a67e2593b60b",
+    "displayName": "Disabling Security Services via Registry"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/DataDeletionOnMulipleDrivesUsingCipherExe.yaml",
+    "output": "AnalyticsRules/DataDeletionOnMulipleDrivesUsingCipherExe.json",
+    "ruleId": "03caa992-477f-4b19-8e2a-8cd58f8f9652",
+    "displayName": "Deletion of data on multiple drives using cipher exe"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/LaZagneCredTheft.yaml",
+    "output": "AnalyticsRules/LaZagneCredTheft.json",
+    "ruleId": "7d0d3050-8dac-4b83-bfae-902f7dc0c21c",
+    "displayName": "LaZagne Credential Theft"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/LogDeletionUsingWevtutil.yaml",
+    "output": "AnalyticsRules/LogDeletionUsingWevtutil.json",
+    "ruleId": "515d0bba-b297-4f83-8280-20ff7f27ecb1",
+    "displayName": "Clearing of forensic evidence from event logs using wevtutil"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/MultiProcessKillWithTaskKill.yaml",
+    "output": "AnalyticsRules/MultiProcessKillWithTaskKill.json",
+    "ruleId": "4dd31bd5-11a3-4b9c-a7c5-4927ab4f2a77",
+    "displayName": "Stopping multiple processes using taskkill"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/PotentialCobaltStrikeRansomwareActivity.yaml",
+    "output": "AnalyticsRules/PotentialCobaltStrikeRansomwareActivity.json",
+    "ruleId": "4bd9ce9d-8586-4beb-8fdb-bd018cacbe7d",
+    "displayName": "Potential Ransomware activity related to Cobalt Strike"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/QakbotDiscoveryActivities.yaml",
+    "output": "AnalyticsRules/QakbotDiscoveryActivities.json",
+    "ruleId": "ba9db6b2-3d05-42ae-8aee-3a15bbe29f27",
+    "displayName": "Qakbot Discovery Activies"
+  },
+  {
+    "source": "Microsoft Defender XDR/Ransomware/ShadowCopyDeletion.yaml",
+    "output": "AnalyticsRules/ShadowCopyDeletion.json",
+    "ruleId": "28c63a44-2d35-48b7-831b-3ed24af17c7e",
+    "displayName": "Shadow Copy Deletions"
+  },
+  {
     "source": "PSOC - Detects Powershell constrained language (CLM) bypass.yaml",
     "output": "AnalyticsRules/PSOC - Detects Powershell constrained language (CLM) bypass.json",
     "ruleId": "d50be92d-0fe3-4766-9db0-6f8273b18382",

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/AVdetectionsrelatedtoUkrainebasedthreats.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "b6685757-3ed1-4b05-a5bd-2cacadc86c2a"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "AV detections related to Ukraine threats",
+        "description": "'This query looks for Microsoft Defender AV detections for malware observed in relation to the war in Ukraine.\n  Ref: https://msrc-blog.microsoft.com/2022/02/28/analysis-resources-cyber-threat-activity-ukraine/ '\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "let UA_threats = dynamic([\"FoxBlade\", \"WhisperGate\", \"Lasainraw\", \"SonicVote\", \"CaddyWiper\", \"AprilAxe\", \"FiberLake\", \"Industroyer\", \"DesertBlade\"]);\nSecurityAlert\n| where ProviderName =~ \"MDATP\"\n| extend ThreatFamilyName = tostring(parse_json(ExtendedProperties).ThreatFamilyName)\n| where ThreatFamilyName in~ (UA_threats)\n| extend HostName = tostring(split(CompromisedEntity, \".\")[0]), DomainIndex = toint(indexof(CompromisedEntity, '.'))\n| extend HostNameDomain = iff(DomainIndex != -1, substring(CompromisedEntity, DomainIndex + 1), CompromisedEntity)\n",
+        "queryFrequency": "P1D",
+        "queryPeriod": "P1D",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Impact"
+        ],
+        "techniques": [
+          "T1485"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "FullName",
+                "columnName": "CompromisedEntity"
+              },
+              {
+                "identifier": "HostName",
+                "columnName": "HostName"
+              },
+              {
+                "identifier": "DnsDomain",
+                "columnName": "HostNameDomain"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/Defense Evasion/Regsvr32Rundll32ImageLoadsAbnormalExtension.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "36fbd4e7-5630-4414-aa42-702a7fdded21"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Regsvr32 Rundll32 Image Loads Abnormal Extension",
+        "description": "This query is looking for regsvr32.exe or rundll32.exe loading DLL images with other extensions than .dll.\nJoins the data to public network events.\nReferences:\nhttps://threathunt.blog/running-live-malware-for-threat-hunting-purposes/\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceImageLoadEvents \n| where InitiatingProcessFileName has_any (\"rundll32.exe\",\"regsvr32.exe\")\n| where FileName !endswith \".dll\"\n| join (\nDeviceNetworkEvents\n| where InitiatingProcessFileName has_any (\"rundll32.exe\",\"regsvr32.exe\")\n| where RemoteIPType == \"Public\"\n) on InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCreationTime, InitiatingProcessCommandLine\n| project TimeGenerated, DeviceName, FileName, FolderPath, SHA1, InitiatingProcessFileName, InitiatingProcessCommandLine, LocalIP, LocalPort, RemoteIP, RemoteUrl, RemotePort, InitiatingProcessParentFileName\n| extend HostName = iff(DeviceName has '.', substring(DeviceName, 0, indexof(DeviceName, '.')), DeviceName)\n| extend DnsDomain = iff(DeviceName has '.', substring(DeviceName, indexof(DeviceName, '.') + 1), \"\")\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1218.010",
+          "T1218.011"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "FullName",
+                "columnName": "DeviceName"
+              },
+              {
+                "identifier": "HostName",
+                "columnName": "HostName"
+              },
+              {
+                "identifier": "DnsDomain",
+                "columnName": "DnsDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "LocalIP"
+              }
+            ]
+          },
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "RemoteIP"
+              }
+            ]
+          },
+          {
+            "entityType": "URL",
+            "fieldMappings": [
+              {
+                "identifier": "Url",
+                "columnName": "RemoteUrl"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

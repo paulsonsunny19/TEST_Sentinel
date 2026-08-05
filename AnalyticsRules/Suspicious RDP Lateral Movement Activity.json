@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Microsoft Defender XDR/Lateral Movement/Suspicious RDP Lateral Movement Activity.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "b76406b0-0344-4d1b-930b-9d1b58faad0d"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Suspicious RDP Lateral Movement Activity",
+        "description": "Detects potential lateral movement activity through Remote Desktop Protocol (RDP)\nusing Microsoft Defender for Endpoint remote session enrichment fields.\nThe rule identifies remote source devices or IP addresses generating RDP-originated\nactivity across multiple target systems within a one-hour period. This behavior\nmay indicate compromised administrator credentials, unauthorized remote access,\nhuman-operated ransomware activity, or attacker lateral movement inside the environment.\nThe detection leverages the following RDP session enrichment fields:\n- IsInitiatingProcessRemoteSession\n- InitiatingProcessRemoteSessionIP\n- InitiatingProcessRemoteSessionDeviceName\nThe rule focuses on identifying RDP fan-out behavior where a single remote source\naccesses multiple devices within a short timeframe.\n",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "let DeviceThreshold = 3;\nlet AllowedSubnets =\n  toscalar(\n      _GetWatchlist('RDPAllowedSubnets')\n      | summarize make_list(SearchKey)\n  );\nDeviceProcessEvents\n| where IsInitiatingProcessRemoteSession == true\n| where isnotempty(InitiatingProcessRemoteSessionIP)\n// Exclude watchlist subnets\n| where not(ipv4_is_in_any_range(InitiatingProcessRemoteSessionIP, AllowedSubnets))\n| summarize\n    TargetDeviceCount = dcount(DeviceName),\n    TargetDevices = make_set(DeviceName, 20),\n    TotalEvents = count(),\n    AccountsUsed = make_set(AccountName, 20),\n    ProcessesExecuted = make_set(FileName, 20)\n    by\n    InitiatingProcessRemoteSessionIP,\n    InitiatingProcessRemoteSessionDeviceName\n| where TargetDeviceCount >= DeviceThreshold\n| project\n    Timestamp = now(),\n    InitiatingProcessRemoteSessionIP,\n    InitiatingProcessRemoteSessionDeviceName,\n    TargetDeviceCount,\n    TotalEvents,\n    AccountsUsed,\n    ProcessesExecuted,\n    TargetDevices\n| order by TargetDeviceCount desc\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "LateralMovement"
+        ],
+        "techniques": [
+          "T1021"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "InitiatingProcessRemoteSessionIP"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "InitiatingProcessRemoteSessionDeviceName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}
