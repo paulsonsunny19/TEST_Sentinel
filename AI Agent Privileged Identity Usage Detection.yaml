@@ -1,0 +1,44 @@
+id: 1d4394c9-1e30-45e1-966a-dc0dc1066d40
+name: AI Agent Privileged Identity Usage Detection
+description: |
+  Detects AI agent runtimes (OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI)
+  executing under privileged, system, or service accounts.
+  Focuses on identity misuse and excessive privilege exposure risk
+  aligned with AI runtime isolation concerns.
+severity: High
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - PrivilegeEscalation
+  - CredentialAccess
+  - Execution
+relevantTechniques:
+  - T1078
+  - T1068
+  - T1059
+query: |
+  DeviceProcessEvents
+  | where Timestamp > ago(1h)
+  | where ProcessCommandLine has_any ("openclaw","moltbot","clawdbot","autogpt","babyagi")
+  | where InitiatingProcessAccountName has_any ("admin","administrator")
+      or InitiatingProcessAccountName endswith "$"
+      or ProcessIntegrityLevel in ("High","System")
+  | summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()
+      by DeviceName, InitiatingProcessAccountName, ProcessIntegrityLevel, FileName
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: InitiatingProcessAccountName
+kind: Scheduled

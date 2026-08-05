@@ -1,0 +1,60 @@
+id: 87ed7d19-f197-415d-a864-6c715f4b8089
+name: AI Agent Suspicious Child Process Spawn Detection
+description: |
+  Detects suspicious child processes spawned by AI agent runtimes
+  (OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI).
+  Focuses on administrative tooling, encoded command execution,
+  persistence creation, defense evasion, and credential-related activity.
+severity: High
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Execution
+  - Persistence
+  - PrivilegeEscalation
+  - DefenseEvasion
+  - CredentialAccess
+relevantTechniques:
+  - T1059
+  - T1547
+  - T1068
+  - T1562
+  - T1003
+query: |
+  DeviceProcessEvents
+  | where Timestamp > ago(1h)
+  | where InitiatingProcessCommandLine has_any ("openclaw","moltbot","clawdbot","autogpt","babyagi")
+  | where FileName in (
+      "powershell.exe","cmd.exe","wmic.exe",
+      "rundll32.exe","mshta.exe","reg.exe",
+      "net.exe","net1.exe","curl.exe","wget.exe",
+      "schtasks.exe","sc.exe"
+  )
+    or ProcessCommandLine has_any (
+      "-enc","-encodedcommand",
+      "Invoke-WebRequest",
+      "DownloadString",
+      "Add-MpPreference",
+      "reg add",
+      "vssadmin",
+      "whoami /priv"
+  )
+  | summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()
+      by DeviceName, InitiatingProcessAccountName, FileName, ProcessCommandLine
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: InitiatingProcessAccountName
+kind: Scheduled

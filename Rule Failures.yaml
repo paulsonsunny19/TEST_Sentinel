@@ -1,0 +1,88 @@
+﻿id: 721c4ca9-8a69-4e39-a35a-24afbad8d646
+name: Rule Failures
+kind: Scheduled
+description: Creates an alert when a rule fails to execute multiple times.
+severity: Medium
+queryFrequency: 1h
+queryPeriod: 17h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  // // Measure the maximum latency over 1-hour periods for the last 90 days:
+  // let _step = 1d;
+  // let _from = bin(now()-90d,_step);
+  // let _to   = bin(now(),_step);
+  // _SentinelHealth()
+  // | make-series maxDeltaIngestionTime = max(datetime_diff('minute',ingestion_time(),TimeGenerated)) on TimeGenerated from _from to _to step _step by Type
+  // | render timechart
+  // // The highest most common value is < 35 minutes, with few peaks over 70 minutes and 1 isolated case of 4 hours
+  let ingestion_delay = 40min;
+  let observation_hours = 16;
+  let rule_look_back = 1h * observation_hours;
+  let threshold = max_of(1,toint(0.75 * observation_hours));
+  _SentinelHealth()
+  | where TimeGenerated >= ago(ingestion_delay + rule_look_back)
+  | where ingestion_time() > ago(rule_look_back)
+  | where Status !in ("Success", "PartialSuccess")
+  | where SentinelResourceType != "Data connector"
+  | extend SubscriptionID = tolower(extract(@'/subscriptions/([^/]+)/', 1, SentinelResourceId))
+  | extend WorkspaceName = tolower(extract(@'/workspaces/([^/]+)/', 1, SentinelResourceId))
+  | extend RuleId = tostring(ExtendedProperties.RuleId)
+  | extend TriggerType = tostring(ExtendedProperties.TriggerType)
+  | extend Issues = todynamic(tostring(ExtendedProperties.Issues))
+  | extend Issues = iff(array_length(Issues) == 0, todynamic("null"), Issues)
+  | mv-expand Issues
+  | extend IssuesCodes = array_strcat(Issues.Code, ',')
+  | extend IssuesCodes = iff(IssuesCodes!="", IssuesCodes, Reason)
+  | extend Tenant = TenantId
+  | summarize occurrences = count() by
+      RuleId,
+      IssuesCodes,
+      Tenant,
+      SubscriptionID,
+      WorkspaceName,
+      TriggerType,
+      SentinelResourceName,
+      Status
+  | project WorkspaceName,SentinelResourceName,Status,IssuesCodes,occurrences,Tenant,SubscriptionID,TriggerType,RuleId
+  | order by occurrences desc
+  // use different thresholds to tune out less severe instances.
+  | where occurrences > case(
+    IssuesCodes == "TemporaryIssuesDelay",    threshold,
+    IssuesCodes == "SemanticErrorInQuery",    threshold,
+    IssuesCodes == "QueryGeneralError",       threshold,
+    IssuesCodes == "QueryTimeout",            threshold,
+    IssuesCodes == "GeneralError",            threshold,
+    IssuesCodes == "ReferencedTableNotFound", 0,
+    IssuesCodes == "The analytics rule is disabled and was not executed.", 0,
+    0 // catch-all - will probably have to further finetune this.
+  )
+customDetails:
+  RuleName: SentinelResourceName
+  TriggerType: TriggerType
+  Status: Status
+  Issues: IssuesCodes
+  Occurrences: occurrences
+alertDetailsOverride:
+  alertDisplayNameFormat: |
+    Analytic Rule '{{SentinelResourceName}}' failed with '{{IssuesCodes}}'.
+  alertDescriptionFormat: |
+    The analytic rule '{{SentinelResourceName}}' failed {{occurrences}} time(s) with error codes: {{IssuesCodes}}.
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: AlertPerResult
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 1h
+    matchingMethod: AnyAlert
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

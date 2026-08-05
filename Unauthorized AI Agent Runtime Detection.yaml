@@ -1,0 +1,81 @@
+custom_KQLCommentsPrefix: 
+  - ' Service Ticket #4548930 - Excluding common search utilitie to reduce false positives.'
+  - ' Service Ticket #4635855 - Updated detection logic to focus on AI runtime/package execution behavior.'
+id: 8e274b6e-29f0-44f6-becd-76b82991eb5c
+name: Unauthorized Self-Hosted AI Runtime Detected
+description: |
+  Detects execution or installation activity associated with self-hosted AI agent frameworks and autonomous AI tooling (such as OpenClaw, Moltbot, Clawdbot, AutoGPT, BabyAGI, Hermes, OpenInterpreter, CrewAI, LangChain, LangGraph, AutoGen, and related ecosystems) on devices not explicitly approved in the Approved_AI_Agent_Runtimes watchlist.
+  The detection focuses on runtime and package-management behavior involving Python, NodeJS, Docker, Podman, npm, pip, and related execution frameworks to reduce false positives from simple keyword searches, administrative discovery activity, or threat-hunting commands.
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Execution
+relevantTechniques:
+  - T1059
+query: |
+  let ApprovedDevices = union isfuzzy=true
+    (_GetWatchlist('Approved_AI_Agent_Runtimes') | project DeviceName),
+    (datatable(DeviceName:string)[])
+  | distinct DeviceName;
+  let SuspiciousKeywords = dynamic([
+    "openclaw",
+    "moltbot",
+    "clawdbot",
+    "autogpt",
+    "babyagi",
+    "hermes",
+    "openinterpreter",
+    "autogen",
+    "crewai",
+    "langchain",
+    "langgraph",
+    "gpt-engineer",
+    "aider",
+    "devika",
+    "swarms"
+  ]);
+  DeviceProcessEvents
+  | where Timestamp > ago(1h)
+  | where DeviceName !in (ApprovedDevices)
+  | where
+    ProcessCommandLine has_any (SuspiciousKeywords)
+    or FileName has_any (SuspiciousKeywords)
+  // Focus on actual runtime / installation activity/instead of grep/find/hunting activity
+  | where
+    FileName startswith "python"
+    or FileName in~ (
+        "node",
+        "docker",
+        "podman",
+        "npm",
+        "pip",
+        "pip3",
+        "uv"
+    )
+  | summarize 
+    FirstSeen=min(Timestamp),
+    LastSeen=max(Timestamp),
+    EventCount=count(),
+    SampleCommand=any(ProcessCommandLine),
+    ParentProcess=any(InitiatingProcessFileName),
+    ParentCommand=any(InitiatingProcessCommandLine)
+   by DeviceName, InitiatingProcessAccountName, FileName
+  | order by LastSeen desc
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: InitiatingProcessAccountName
+kind: Scheduled

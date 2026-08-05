@@ -1,0 +1,29 @@
+﻿id: d8a7c5b6-7434-4dd6-971f-2af54c4775e0
+name: Quota exceeded
+kind: Scheduled
+description: Create an alert when the daily cap of usage has been exceeded.
+severity: High
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Impact
+relevantTechniques:
+- T0826
+- T1489
+query: _LogOperation() | where Category =~ "Ingestion" | where Detail contains "OverQuota"
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

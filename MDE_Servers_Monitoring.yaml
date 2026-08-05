@@ -1,0 +1,91 @@
+id: 20c7fd22-cad2-4a34-9c3a-c09b127d221b
+name: MDE Servers Monitoring
+kind: Scheduled
+description: |-
+  Detects Microsoft Defender for Endpoint (MDE) sensors on servers that either 
+  - Were previously active but have stopped reporting for at least threshold_hours.
+  - Never reported as active during the lookback period.
+severity: Medium
+queryFrequency: 12h
+queryPeriod: 14d
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1629
+query: |-
+  // Service Ticket #4339732 - SOCe | Rules for mde agents health monitoring
+  let ExcludedServers = (_GetWatchlist("Excluded_Servers") |extend server_name = column_ifexists('server_name',"") |distinct server_name |project SearchKey = (server_name)); //Added to exclude known servers
+  let lookback = 14d;
+  let threshold_hours = 24; // for at least how many hours the agent must have gone inactive
+  let TenantIdTable = materialize(
+      union isfuzzy=true
+          (ThreatIntelIndicators | where TimeGenerated > ago(1d) | where isnotempty(AzureTenantId)  | take 1 | project TenantId = AzureTenantId),
+          (OfficeActivity        | where TimeGenerated > ago(1d) | where isnotempty(OrganizationId) | take 1 | project TenantId = OrganizationId),
+          (SigninLogs            | where TimeGenerated > ago(1d) | where isnotempty(AADTenantId)    | take 1 | project TenantId = AADTenantId)
+      | take 1
+  );
+  let tid = coalesce(toscalar(TenantIdTable | project TenantId), "00000000-0000-0000-0000-000000000000");
+  let FilteredDevices = materialize(
+    DeviceInfo 
+    | where TimeGenerated > ago(lookback) 
+    | where OnboardingStatus == "Onboarded"
+    | where DeviceType == "Server"
+    | project DeviceName, DeviceId, TimeGenerated, Timestamp, tostring(SensorHealthState)
+  );
+  let NeverActiveDevice = FilteredDevices
+  | summarize make_set(SensorHealthState,10) by DeviceId
+  | where not(set_has_element(set_SensorHealthState, "Active"))
+  | lookup kind=inner FilteredDevices on DeviceId
+  | summarize arg_max(TimeGenerated, *) by DeviceId
+  | extend HoursSinceLastActive = -1;
+  let PreviousActiveDevices = FilteredDevices
+  | summarize arg_max(TimeGenerated, *) by DeviceId
+  | join kind=inner (
+    FilteredDevices
+    | where SensorHealthState == "Active"
+    | summarize arg_max(TimeGenerated, *) by DeviceId
+    | project DeviceId, TimeGeneratedWhenLastActive = TimeGenerated, TimestampWhenLastActive = Timestamp
+  ) on DeviceId
+  | where SensorHealthState != "Active" and TimeGenerated > TimeGeneratedWhenLastActive
+  | extend HoursSinceLastActive = datetime_diff('hour', now(), TimeGeneratedWhenLastActive)
+  | where HoursSinceLastActive > threshold_hours;
+  union PreviousActiveDevices, NeverActiveDevice
+  | extend SinceLastActiveDescription = iff(HoursSinceLastActive >= 0, strcat("Hours since last active: ", tostring(HoursSinceLastActive)), strcat("Never Active in ", toint(lookback/1d), " days"))
+  | project DeviceId, DeviceName, SensorHealthState, HoursSinceLastActive, SinceLastActiveDescription, TimeGenerated, TimeGeneratedWhenLastActive, TimestampWhenLastActive
+  | where DeviceName !in (ExcludedServers)
+  | extend MDEDeviceLink = strcat("https://security.microsoft.com/machines/", DeviceId, "?tid=", tid)
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: DeviceName
+- entityType: Host
+  fieldMappings:
+  - identifier: AzureID
+    columnName: DeviceId
+suppressionEnabled: false
+customDetails:
+  SensorHealthState: SensorHealthState
+  MDEDeviceLink: MDEDeviceLink
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDisplayNameFormat: 'MDE Sensor {{SensorHealthState}} on: {{DeviceName}}'
+  alertDescriptionFormat: 'MDE Sensor on {{DeviceName}} is in state: {{SensorHealthState}} - {{SinceLastActiveDescription}}'
+  alertDynamicProperties:
+  - alertProperty: AlertLink
+    value: MDEDeviceLink
+eventGroupingSettings:
+  aggregationKind: AlertPerResult
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 3d
+    matchingMethod: AllEntities
+    groupByEntities:
+    - Host
+    groupByAlertDetails: []
+    groupByCustomDetails: []

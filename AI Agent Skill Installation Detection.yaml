@@ -1,0 +1,46 @@
+id: b14d08f5-99e3-48ca-8241-fbe806a3bc53
+name: AI Agent Skill Installation Detection
+description: |
+  Detects installation of AI agent skills using the 'clawhub install' command.
+  The rule compares installed skills against the Approved_AI_Agent_Skills
+  watchlist for tuning purposes. The rule will not fail if the watchlist
+  does not exist.
+severity: High
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Execution
+  - Persistence
+relevantTechniques:
+  - T1059
+  - T1505
+query: |
+  let ApprovedSkills = union isfuzzy=true
+      (_GetWatchlist('Approved_AI_Agent_Skills') | project SkillName),
+      (datatable(SkillName:string)[])
+  | distinct SkillName;
+  DeviceProcessEvents
+  | where Timestamp > ago(1h)
+  | where ProcessCommandLine has "clawhub install"
+  | extend SkillName = extract(@"\bclawhub\s+install\s+([^\s]+)", 1, ProcessCommandLine)
+  | where isnotempty(SkillName)
+  | where SkillName !in (ApprovedSkills)
+  | summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()
+      by DeviceName, InitiatingProcessAccountName, SkillName
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: InitiatingProcessAccountName
+kind: Scheduled

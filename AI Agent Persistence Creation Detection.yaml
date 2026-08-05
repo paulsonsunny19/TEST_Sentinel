@@ -1,0 +1,50 @@
+id: deb9eba3-5eca-4592-95ea-bdfe91498920
+name: AI Agent Persistence Creation Detection
+description: |
+  Detects persistence mechanisms created by AI agent runtimes
+  (OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI).
+  Focuses on scheduled task creation, service installation, and
+  registry-based autorun modifications that may indicate long-term foothold attempts.
+severity: High
+status: Available
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - Persistence
+  - PrivilegeEscalation
+relevantTechniques:
+  - T1547
+  - T1053
+  - T1543
+query: |
+  DeviceProcessEvents
+  | where Timestamp > ago(1h)
+  | where InitiatingProcessCommandLine has_any ("openclaw","moltbot","clawdbot","autogpt","babyagi")
+  | where ProcessCommandLine has_any (
+      "schtasks /create",
+      "sc create",
+      "reg add",
+      "\\Run",
+      "\\RunOnce",
+      "Startup",
+      "New-Service",
+      "Set-Service"
+  )
+  | summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()
+      by DeviceName, InitiatingProcessAccountName, FileName, ProcessCommandLine
+entityMappings:
+  - entityType: Host
+    fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+  - entityType: Account
+    fieldMappings:
+      - identifier: Name
+        columnName: InitiatingProcessAccountName
+kind: Scheduled

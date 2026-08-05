@@ -1,0 +1,147 @@
+﻿id: 8c4948e6-21e3-4eb7-a473-7c1ef5982b57
+name: Tables stopped logging - MEDIUM
+kind: Scheduled
+description: |-
+  Monitors data ingestion for medium-priority tables.
+  Query to display recent events:
+
+  let _step = 1h;
+  let lookback = 50h;
+  union isfuzzy=true
+  Cisco_Umbrella_dns_CL,
+  Cisco_Umbrella_proxy_CL,
+  Cisco_Umbrella_ip_CL,
+  Cisco_Umbrella_cloudfirewall_CL,
+  McasShadowItReporting,
+  ThreatIntelIndicators,
+  EmailEvents,
+  EmailUrlInfo,
+  IdentityLogonEvents,
+  IdentityQueryEvents,
+  IdentityDirectoryEvents,
+  CloudAppEvents,
+  AADServicePrincipalSignInLogs,
+  ADFSSignInLogs,
+  AADUserRiskEvents,
+  NetworkAccessTraffic,
+  AADRiskyServicePrincipals,
+  AADServicePrincipalRiskEvents,
+  MicrosoftGraphActivityLogs,
+  EnrichedOffice365AuditLogs,
+  RemoteNetworkHealthLogs
+  | make-series count() default=0 on TimeGenerated from bin(ago(lookback),_step) to bin(now(),_step) step _step by Type
+  | render timechart
+severity: Medium
+queryFrequency: 1h
+queryPeriod: 50h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1629
+query: |-
+  // Service Ticket #4067293 - Tables stopped logging
+  // MEDIUM: compare the latest 2 hours with the previous baseline of 2days
+  let slot_duration = 1h;
+  let check_slots = 2;
+  let full_slots = 48 + check_slots;
+  let baseline_slots = full_slots - check_slots;
+  let enough_slots = toint(baseline_slots/2); // At least 50% slots are needed to calculate the baseline
+  // raise an alert if the average of the latest slots is smaller by 70% (1-0.3) of the MINIMUM value from the baseline
+  let threshold_percentage = 0.3;
+  /////////////////////////////////////////////////////
+  let currenttime = now(); // - 1h; //datetime(2025-03-18T13:00:00Z); // useful for debugging
+  let full_time = full_slots * slot_duration;
+  let check_time = check_slots * slot_duration;
+  let full_start = bin(currenttime - full_time, slot_duration); // Round the start time to the nearest full slot time
+  let full_now = bin(currenttime, slot_duration); // Round the end time to the nearest full slot time
+  let AnalysedTables =  (datatable(Type:string) [
+      "Cisco_Umbrella_dns_CL",
+      "Cisco_Umbrella_proxy_CL",
+      "Cisco_Umbrella_ip_CL",
+      "Cisco_Umbrella_cloudfirewall_CL",
+      "McasShadowItReporting",
+      "ThreatIntelligenceIndicator",
+      "EmailEvents",
+      "EmailUrlInfo",
+      "IdentityLogonEvents",
+      "IdentityQueryEvents",
+      "IdentityDirectoryEvents",
+      "CloudAppEvents",
+      "AADServicePrincipalSignInLogs",
+      "ADFSSignInLogs",
+      "AADUserRiskEvents",
+      "NetworkAccessTraffic",
+      "AADRiskyServicePrincipals",
+      "AADServicePrincipalRiskEvents",
+      "MicrosoftGraphActivityLogs",
+      "EnrichedOffice365AuditLogs",
+      "RemoteNetworkHealthLogs"
+  ]);
+  let t_slot_counts = union isfuzzy=true
+      (Cisco_Umbrella_dns_CL           | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (Cisco_Umbrella_proxy_CL         | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (Cisco_Umbrella_ip_CL            | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (Cisco_Umbrella_cloudfirewall_CL | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (McasShadowItReporting           | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (ThreatIntelligenceIndicator     | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (EmailEvents                     | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (EmailUrlInfo                    | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (IdentityLogonEvents             | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (IdentityQueryEvents             | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (IdentityDirectoryEvents         | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (CloudAppEvents                  | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (AADServicePrincipalSignInLogs   | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (ADFSSignInLogs                  | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (AADUserRiskEvents               | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (NetworkAccessTraffic            | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (AADRiskyServicePrincipals       | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (AADServicePrincipalRiskEvents   | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (MicrosoftGraphActivityLogs      | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (EnrichedOffice365AuditLogs      | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (RemoteNetworkHealthLogs         | where TimeGenerated between (full_start .. full_now) | summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),
+      (datatable()[]);
+  let t_baseline_raw = t_slot_counts | where TimeGenerated between (full_start .. (full_now - check_time -1ms)); // baseline considers all the slots excluding the ones in the check_time time window
+  let t_baseline_filter_enough_slots = (t_baseline_raw | summarize slots = count() by Type)
+  | join t_baseline_raw on Type
+  | where slots > enough_slots; // Ignore if we do not have enough data points
+  let t_baseline = t_baseline_filter_enough_slots
+  | summarize count_baseline = min(count_slot) by Type; // and then takes the slot with the LOWEST value
+  let t_check = t_slot_counts
+  | where TimeGenerated >= full_now - check_time  // Slots to check: considers all the slots in the check_time time window
+  | summarize count_check = toint(avg(count_slot)) by Type; // and then takes the average of these slots
+  // Now join with the static AnalysedTables to ensure that even tables with completely missing entries are reported
+  let t_output = AnalysedTables
+  | join kind=fullouter (t_baseline) on Type
+  | join kind=fullouter (t_check) on Type
+  | extend count_baseline = coalesce(count_baseline, 0), count_check = coalesce(count_check, 0)
+  //| order by case(count_baseline == 0, 1, 0) asc, Type asc // this is just for easier debugging
+  // Alert if the current average is lower than X% of the lowest baseline slot
+  | where count_baseline > 0 and count_check < max_of(1,round(threshold_percentage * count_baseline,0));
+  // Add a column with the list of affected tables per customer
+  let t_affectedtables = t_output | summarize AffectedTables=array_strcat(todynamic(make_set(Type,100)),",");
+  t_output | extend OtherAffectedTables = toscalar(t_affectedtables)
+  | project Table=Type, count_baseline, count_check, OtherAffectedTables, TimeSlot = full_now
+suppressionEnabled: false
+customDetails:
+  Table: Table
+  AffectedTables: OtherAffectedTables
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDisplayNameFormat: Tables stopped logging - MEDIUM - {{Table}}
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: AlertPerResult
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 2d
+    matchingMethod: Selected
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails:
+    - Table
+
