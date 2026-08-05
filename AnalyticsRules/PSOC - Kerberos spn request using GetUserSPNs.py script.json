@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Kerberos spn request using GetUserSPNs.py script.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "bee8b2e0-eb76-4c33-8a5b-98d0a6c1f736"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Kerberos spn request using GetUserSPNs.py script",
+        "description": "detect Kerberos spn requests",
+        "severity": "High",
+        "enabled": true,
+        "query": "//detect Kerberos spn requests\nSecurityEvent\n| where EventID == 4769\n| parse EventData with * '<Data Name=\"ServiceName\">' ServiceName '</Data>' *\n| parse EventData with * '<Data Name=\"TicketEncryptionType\">' TicketEncryptionType '</Data>' *\n| parse EventData with * '<Data Name=\"Status\">' Status '</Data>' *\n| parse EventData with * '<Data Name=\"TicketOptions\">' TicketOptions '</Data>' *\n| where not(ServiceName matches regex @\"(?i)^krbtgt$\" or ServiceName matches regex @\".*\\$$\")\n| where TicketEncryptionType == \"0x17\"\n| where Status == \"0x0\"\n| where TicketOptions == \"0x40810010\"\n| extend\n    ComputerName = tostring(column_ifexists(\"Computer\", \"\")),\n    Account = tostring(\n        coalesce(\n            column_ifexists(\"SubjectUserName\", \"\"),\n            column_ifexists(\"Account\", \"\")\n        )\n    ),\n    CommandLineMapped = tostring(column_ifexists(\"ServiceFileName\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1558"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "ComputerName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

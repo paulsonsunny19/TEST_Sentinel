@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Possible Uninstalling of Antiviruses.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "34bb59a0-7e99-4486-8868-dd8243413090"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Possible Uninstalling of Antiviruses",
+        "description": "Detects the attempt to uninstall AV",
+        "severity": "High",
+        "enabled": true,
+        "query": "//Detects the attempt to uninstall AV\nlet exclusions = dynamic([\"DXL\\\\dxlsetup-ma.exe\",\"OneDriveSetup.exe\",\"GoogleUpdateSetup\"]);\n_Im_ProcessCreate\n| where TargetProcessName has_any (\"cmd.exe\",\"powershell.exe\")\n| where CommandLine has_any (\"/silent\",\"/verysilent\")\n| where CommandLine has_any (\"/noreboot\",\"/REMSILENTNOREBOOT\",\"/forceuninstall\",\"/uninstall\",\"/norestart\")\n| where CommandLine has_any (\"Malwarebytes\",\"kasper\",\"Webroot\",\"Avira\",\"avg\",\"Bitdefender\",\"Norton\",\"ESET\",\"Avast\",\"McAfee\",\"Trend Micro\",\"Sophos\")\n| where not(CommandLine has_any (exclusions))\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

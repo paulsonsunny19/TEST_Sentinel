@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "7bd2c1c5-c963-41ff-abaf-eae4bb3e6bce"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation",
+        "description": "This rule detects the execution of rdrleakdiag.exe with the /fullmemdmp parameter, which is used to generate a full memory dump of a target process. While rdrleakdiag.exe is a legitimate Microsoft diagnostic tool, adversaries may abuse it to dump process memory and extract sensitive information such as credentials, authentication tokens, API keys, or other secrets. The rule looks for command-line usage consistent with memory dump creation, including the /p (process ID), /o (output directory), and /fullmemdmp switches.",
+        "severity": "High",
+        "enabled": true,
+        "query": "// This rule detects the execution of rdrleakdiag.exe with the /fullmemdmp parameter, which is used to generate a full memory dump of a target process. While rdrleakdiag.exe is a legitimate Microsoft diagnostic tool, adversaries may abuse it to dump process memory and extract sensitive information such as credentials, authentication tokens, API keys, or other secrets. The rule looks for command-line usage consistent with memory dump creation, including the /p (process ID), /o (output directory), and /fullmemdmp switches.\nSecurityEvent\n| where EventID == 4688\n| where EventSourceName == \"Microsoft-Windows-Security-Auditing\"\n| where Process has \"rdrleakdiag.exe\"\n| where ParentProcessName has_any (\"cmd.exe\", \"powershell.exe\")\n| where CommandLine has_all (\"/p\", \"/o\", \"/fullmemdmp\")\n| project\n    TimeGenerated,\n    CommandLine,\n    Computer,\n    Account,\n    ParentProcessName,\n    Process\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1003"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Account"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": false,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

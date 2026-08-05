@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "67a83787-530e-4db9-b01f-b7c6e39eb5f3"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh",
+        "description": "Detects the use of curl.exe to exfiltrate data to the public file-transfer service sendit.sh using the form post flag (-F) and file upload syntax (file=@). This specific tradecraft was observed being utilized for data exfiltration in a 2026 Seedworm espionage campaign.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "SecurityEvent\n| where EventID == 4688\n| where EventSourceName == \"Microsoft-Windows-Security-Auditing\"\n| where Process has \"curl.exe\"  // Process Name contains curl.exe\n| where ParentProcessName has_any (\"cmd.exe\", \"powershell.exe\")  // Parent Process Name\n| where CommandLine has_all (\"-f\", \"file=@\", \"sendit.sh\")  // Command contains all\n| project\n    TimeGenerated,\n    Computer,\n    Account = SubjectUserName,\n    CommandLine,\n    ProcessName = Process,\n    NewProcessName,\n    ParentProcessName\n| order by TimeGenerated desc",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Exfiltration"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "Account"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": false,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

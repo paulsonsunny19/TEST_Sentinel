@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Possible persistence via registry key detected.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "fde3c86f-9920-49ba-a563-615096de4ae0"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Possible persistence via registry key detected",
+        "description": "Detects persistence related registry changes",
+        "severity": "High",
+        "enabled": true,
+        "query": "//this is to restrict the rule to servers only, endpoints often match this during updates\nlet RegistryKey = dynamic([\"\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Policies\\\\Explorer\\\\Run\",\"\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnceEx\",\"\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunServices\",\"\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunServicesOnce\",\"\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\User Shell Folders\",\"\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Shell Folders\",\"\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\",\"\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\",\"\\\\software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Winlogon\\\\Shell\",\"\\\\software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\",\"\\\\Control\\\\Session Manager\\\\BootExecute\",\"\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Event Viewer\"]);\nlet process_Name  = dynamic([\"cmd.exe\",\"powershell.exe\"]);\nDeviceProcessEvents \n| where FileName  has \"reg.exe\"\n| where ProcessCommandLine has_all (\"reg\", \"add\")\n| where ProcessCommandLine has_any (RegistryKey)\n| where InitiatingProcessFileName has_any (process_Name)\n| extend\n    Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n    Account = tostring(column_ifexists(\"InitiatingProcessAccountName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ProcessId\", \"\")),\n    CommandLineMapped = tostring(column_ifexists(\"ProcessCommandLine\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Persistence",
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1037",
+          "T1112"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

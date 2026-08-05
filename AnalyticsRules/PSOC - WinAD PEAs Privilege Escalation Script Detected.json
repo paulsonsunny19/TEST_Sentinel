@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - WinAD PEAs Privilege Escalation Script Detected.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "43dfb01d-dad8-4b37-be8d-55821484d98c"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Win/AD PEAs Privilege Escalation Script Detected",
+        "description": "detects winpeas by filename.\nin many real attacks, attackers use the default naming.",
+        "severity": "High",
+        "enabled": true,
+        "query": "// Detects winpeas, winpeas is a priv esc tool used by attackers. \n// this checks for the named file, as seen in real attacks the attacker rarely renames the file\nlet ProcessNames = dynamic([\"winpease.exe\",\"adpeas.exe\",\"winpease.bat\",\"adpeas.bat\",\"winpease.ps1\",\"adpeas.ps1\"]);\n_Im_ProcessCreate(targetprocess_has_any=ProcessNames)\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Discovery"
+        ],
+        "techniques": [
+          "T1082",
+          "T1087"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious usage of Cobalt Strike psexec command.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "0a06c000-4b5b-4810-9ea1-96ef74de19ef"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious usage of Cobalt Strike psexec command",
+        "description": "Detects the use of cobalt strike.\nThe default service installation will be a random 7 character named service.",
+        "severity": "High",
+        "enabled": true,
+        "query": "//Service Ticket #4360554  - Exclude legitimate VirtualBox service installations to reduce false positives\n// Service Ticket #4625479 - Exclude legitimate Memurai for Gridbeyond\n//Detects CobaltStrike service installation, the name will be 7 random characters, and the filename will be an IP followed by 7 chars.exe\nDeviceEvents\n| where ActionType == \"ServiceInstalled\"\n| where AdditionalFields.ServiceName matches regex @\"^[\\w]{7}$\"\n| where FileName matches regex @\"^[\\w]{7}\\.exe$\"\n| where not(FolderPath startswith \"C:\\\\Program Files\\\\Oracle\\\\VirtualBox\")\n| where AdditionalFields.ServiceName <> \"Memurai\"\n| extend\n  Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n  Account = tostring(column_ifexists(\"AccountName\", \"\")),\n  ProcessId = tostring(column_ifexists(\"InitiatingProcessId\", \"\")),\n  CommandLineMapped = tostring(column_ifexists(\"InitiatingProcessCommandLine\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T1569"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

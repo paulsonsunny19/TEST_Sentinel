@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Sentinel Monitoring Services Down.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "45bdfab8-346d-42c6-9444-ba281fdfa5cb"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "NRT",
+      "properties": {
+        "displayName": "PSOC - Sentinel Monitoring Services Down",
+        "description": "This rule is created to monitor if there is any downtime for Sentinel and logs are not being written into tables.",
+        "severity": "High",
+        "enabled": true,
+        "query": "SecurityAlert\n| where TimeGenerated > ago(500m)\n| where AlertName contains \"Tables stopped logging - HIGH\"\n| extend TableName = tostring(split(AlertName, \" - \")[-1])\n| summarize DistinctTables = dcount(TableName), Tables = make_set(TableName) by bin(TimeGenerated, 500m)\n| where DistinctTables >= 2",
+        "tactics": [
+          "Impact"
+        ],
+        "techniques": [
+          "T1529"
+        ],
+        "suppressionEnabled": true,
+        "suppressionDuration": "P1D",
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "customDetails": {
+          "AffectedTables": "Tables",
+          "Table": "Tables"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

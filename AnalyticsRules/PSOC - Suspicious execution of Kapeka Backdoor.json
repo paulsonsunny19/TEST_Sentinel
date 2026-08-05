@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious execution of Kapeka Backdoor.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "0956987b-1c86-4ae3-bca1-bec84e494d17"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious execution of Kapeka Backdoor",
+        "description": "detects the kapeka backdoor\nref: hxxps[://]labs[.]withsecure[.]com/publications/kapeka",
+        "severity": "High",
+        "enabled": true,
+        "query": "//detects the kapeka backdoor\n//ref: hxxps[://]labs[.]withsecure[.]com/publications/kapeka\nlet Parent_Process = dynamic([\"cmd.exe\",\"powershell.exe\"]);\nlet cmd_all = dynamic([\"\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\",\"\\\"Sens Api\\\"\",\"rundll32.exe\",\".wll\",\"#1\"]);\nlet Detects_Backdoor_Kapeka_Via_Registry_Key = _Im_ProcessCreate(parentprocess_has_any=Parent_Process,commandline_has_all=cmd_all,targetprocess_has_any=\"reg.exe\");\nlet Parent_Process_2 = dynamic([\"cmd.exe\",\"powershell.exe\"]);\nlet cmd_all_2 = dynamic([\"/create\",\"/sc ONSTART\",\"/tn \\\"Sens Api\\\"\",\"rundll32.exe\",\".wll\",\"#1\"]);\nlet Detects_Backdoor_Kapeka_Via_Schedule_Task = _Im_ProcessCreate(parentprocess_has_any=Parent_Process_2,commandline_has_all=cmd_all_2,targetprocess_has_any=\"schtasks.exe\");\nunion isfuzzy=true\nDetects_Backdoor_Kapeka_Via_Registry_Key,Detects_Backdoor_Kapeka_Via_Schedule_Task\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion",
+          "Execution",
+          "Persistence"
+        ],
+        "techniques": [
+          "T1112",
+          "T1053",
+          "T1603"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

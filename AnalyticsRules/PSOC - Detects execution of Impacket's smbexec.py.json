@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detects execution of Impacket's smbexec.py.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "5def14cf-4d4e-452d-83d2-ac0653376f47"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detects execution of Impacket's smbexec.py",
+        "description": "Detects impacket through specific IOCs",
+        "severity": "High",
+        "enabled": true,
+        "query": "//Detects impacket through specific IOCs\nSecurityEvent\n| where EventID == 4697\n| where ServiceName matches regex @\"^[a-zA-Z]{8}$\"\n| where ServiceFileName matches regex @\"%COMSPEC%\\s+/Q\\s+/c\\s+echo\"\n| where ServiceFileName matches regex @\"\\\\\\\\%COMPUTERNAME%\\\\C$\\\\__output\\s+2\\^\\>\\^\\&1\"\n| where ServiceFileName matches regex @\"%SYSTEMROOT%\\\\[a-zA-Z]{8}\\.bat\"\n| extend\n    ComputerName = tostring(column_ifexists(\"Computer\", \"\")),\n    Account = tostring(\n        coalesce(\n            column_ifexists(\"SubjectUserName\", \"\"),\n            column_ifexists(\"Account\", \"\")\n        )\n    ),\n    CommandLineMapped = tostring(column_ifexists(\"ServiceFileName\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "LateralMovement"
+        ],
+        "techniques": [
+          "T0886"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "ComputerName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

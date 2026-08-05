@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Unsigned or Untrusted DLL Loaded from Suspicious Path.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "775613d0-5ea5-412f-ae6d-1fa93ae2d472"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Unsigned or Untrusted DLL Loaded from Suspicious Path",
+        "description": "This rule detects the loading of unsigned or untrusted DLLs from suspicious, non-standard file paths into a set of common Windows processes",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Detects unsigned or untrusted DLLs loaded from non-standard paths into processes that recently executed\nlet Lookback = 30min;\nlet SuspiciousPaths = dynamic([\"\\\\Users\\\\Public\\\\\",\"\\\\Temp\\\\\",\"\\\\AppData\\\\\",\"\\\\ProgramData\\\\\",\"\\\\Downloads\\\\\",\"\\\\PerfLogs\\\\\"]);\nlet TargetProcesses = dynamic([\n    \"explorer.exe\",\"svchost.exe\",\"lsass.exe\",\"winlogon.exe\",\"csrss.exe\",\"services.exe\",\n    \"rundll32.exe\",\"regsvr32.exe\",\"msiexec.exe\",\"wmiprvse.exe\",\"taskhostw.exe\",\"cmd.exe\",\n    \"powershell.exe\",\"python.exe\",\"notepad.exe\",\"chrome.exe\",\"winword.exe\"\n]);\nlet TrustedSigners = dynamic([\"Microsoft\",\"Windows\",\"Google\",\"Intel\",\"NVIDIA\",\"AMD\",\"CrowdStrike\",\"SentinelOne\"]);\n// Suspicious DLL Loads\nlet SuspiciousDLLs =\nDeviceImageLoadEvents\n| where Timestamp >= ago(Lookback)\n| where FileName endswith \".dll\"\n| where FolderPath has_any (SuspiciousPaths)\n| where InitiatingProcessFileName in~ (TargetProcesses)\n| project Timestamp, DeviceName, FileName, FolderPath, SHA1, SHA256, InitiatingProcessFileName, InitiatingProcessCommandLine;\n// Unsigned / Untrusted Modules\nlet UnsignedDLLs =\nDeviceFileCertificateInfo\n| where IsSigned == false or IsTrusted == false\n| project SHA1, Signer, IsSigned, IsTrusted;\n// Combine and Focus on Untrusted Loads\nlet Combined = SuspiciousDLLs\n| join kind=inner (UnsignedDLLs) on SHA1\n| where not (Signer has_any (TrustedSigners))\n| project Timestamp, DeviceName, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine, Signer, IsSigned, IsTrusted, SHA256;\n// Correlate with Recent Process Execution\nlet RecentProcs = DeviceProcessEvents\n| where Timestamp >= ago(Lookback)\n| where FileName in~ (TargetProcesses)\n| project DeviceName, FileName, ProcessCommandLine, ProcessId, ProcessCreationTime = Timestamp;\n// Correlate within 5-minute window of process execution\nCombined\n| join kind=inner (\n    RecentProcs\n    | extend TimeKey = bin(ProcessCreationTime, 5m)\n) on DeviceName, $left.InitiatingProcessFileName == $right.FileName\n| where abs(datetime_diff('minute', Timestamp, ProcessCreationTime)) <= 5\n| summarize\n    FirstSeen = min(Timestamp),\n    LastSeen = max(Timestamp),\n    ExampleCmd = any(InitiatingProcessCommandLine),\n    LoadedPaths = make_set(FolderPath),\n    Signers = make_set(Signer)\n    by DeviceName, FileName, InitiatingProcessFileName, IsSigned, IsTrusted, SHA256\n| project DeviceName, FileName, InitiatingProcessFileName, IsSigned, IsTrusted, Signers, LoadedPaths, FirstSeen, LastSeen, ExampleCmd\n| order by LastSeen desc\n| extend\n    Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n    CommandLineMapped = tostring(column_ifexists(\"ExampleCmd\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution",
+          "Persistence",
+          "PrivilegeEscalation",
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1129",
+          "T1574.001"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

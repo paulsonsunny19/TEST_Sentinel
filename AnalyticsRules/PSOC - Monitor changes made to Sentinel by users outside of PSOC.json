@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Monitor changes made to Sentinel by users outside of PSOC.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "f335cb43-0f1f-4c77-936d-3636d7f4f69b"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Monitor changes made to Sentinel by users outside of PSOC",
+        "description": "This rule monitors any changes made to Sentinel by users who are not a part of Presidio SOC.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//Add list of all users in the SOC authorized to make changes to Sentinel into the watchlist.\nlet soc_team = (_GetWatchlist('SOC_Team') | project Email);\nAzureActivity\n| where OperationNameValue startswith \"MICROSOFT.SECURITYINSIGHTS\"\n| where OperationNameValue != \"MICROSOFT.SECURITYINSIGHTS/REGISTER/ACTION\"\n| where Caller !in (soc_team)\n| extend\n    Account = tostring(column_ifexists(\"Caller\", \"\")),\n    SourceIP = tostring(column_ifexists(\"CallerIpAddress\", \"\")),\n    Resource = tostring(column_ifexists(\"_ResourceId\", \"\"))",
+        "queryFrequency": "PT30M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1578"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "SourceIP"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

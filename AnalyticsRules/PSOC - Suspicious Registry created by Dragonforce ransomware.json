@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious Registry created by Dragonforce ransomware.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "24fbd12c-2e1b-4548-8cab-fe3862601382"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious Registry created by Dragonforce ransomware",
+        "description": "detects creation of tunneling registry key known to by a TTP of Dragonforce ransomware",
+        "severity": "High",
+        "enabled": true,
+        "query": "// detects creation of tunneling registry key known to by a TTP of Dragonforce ransomware\nlet eventtype = dynamic([\"RegistryValueSet\"]);\nlet RegistryValue = dynamic([\"socks5\"]);\nlet RegistryKey = dynamic([\"Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\"]);\n_Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrykey_has_any=RegistryKey)\n| extend\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    CommandLine = tostring(column_ifexists(\"ActingProcessCommandLine\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ActingProcessId\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Exfiltration"
+        ],
+        "techniques": [
+          "T1041"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detects suspicious execution of Sysinternals PsSuspend.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "bb7921ab-004c-4bd2-a226-2a1fe50c40e3"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detects suspicious execution of Sysinternals PsSuspend",
+        "description": "sysinternals pssuspend tool allows suspending of a process, attackers have used this to suspend AV",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//sysinternals pssuspend tool allows suspending of a process, attackers have used this to suspend AV\n_Im_ProcessCreate\n| where TargetProcessName has_any (\"pssuspend.exe\",\"pssuspend64.exe\")\n| where CommandLine has \"msmpeng.exe\"\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

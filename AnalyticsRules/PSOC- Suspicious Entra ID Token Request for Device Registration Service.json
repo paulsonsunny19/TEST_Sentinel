@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC- Suspicious Entra ID Token Request for Device Registration Service.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "620b612a-08c8-44fc-91be-62ce3fb05a76"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious Entra ID Token Request for Device Registration Service",
+        "description": "Detects a non-interactive sign-in using a refresh token for the Microsoft Authentication Broker client, targeting the Device Registration Service (DRS) with the 'adrs_access' scope.\nThis specific combination of attributes is highly indicative of an adversary using tools like ROADtools to register a malicious device in the tenant following a successful OAuth phishing attack.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//Detects a non-interactive sign-in using a refresh token for the Microsoft Authentication Broker client, targeting the Device Registration Service (DRS) with the 'adrs_access' scope. This specific combination of attributes is highly indicative of an adversary using tools like ROADtools to register a malicious device in the tenant following a successful OAuth phishing attack.\nAADNonInteractiveUserSignInLogs\n| where ResultType == 0\n| where AppId == \"29d9ed98-a469-4536-ade2-f981bc1d605e\"\n| where ResourceIdentity == \"01cb2876-7ebd-4aa4-9cc9-d28bd4d359a9\"\n| where UserType contains \"Guest\"\n| where AuthenticationProcessingDetails contains \"adrs_access\"\n| extend\n  Account = tostring(column_ifexists(\"UserPrincipalName\", \"\")),\n  SourceIP = tostring(column_ifexists(\"IPAddress\", \"\"))\n| project\n    TimeGenerated,\n    Account,\n    SourceIP,\n    AppDisplayName,\n    ResourceDisplayName\n| order by TimeGenerated desc",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "SourceIP"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,602 @@
+[
+  {
+    "source": "PSOC - Detects Powershell constrained language (CLM) bypass.yaml",
+    "output": "AnalyticsRules/PSOC - Detects Powershell constrained language (CLM) bypass.json",
+    "ruleId": "d50be92d-0fe3-4766-9db0-6f8273b18382",
+    "displayName": "PSOC - Detects Powershell constrained language (CLM) bypass"
+  },
+  {
+    "source": "PSOC - Detects execution of Impacket's smbexec.py.yaml",
+    "output": "AnalyticsRules/PSOC - Detects execution of Impacket's smbexec.py.json",
+    "ruleId": "5def14cf-4d4e-452d-83d2-ac0653376f47",
+    "displayName": "PSOC - Detects execution of Impacket's smbexec.py"
+  },
+  {
+    "source": "PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe).yaml",
+    "output": "AnalyticsRules/PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe).json",
+    "ruleId": "ccb36182-fac5-4e21-a9fe-c58e2338283a",
+    "displayName": "PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe)"
+  },
+  {
+    "source": "PSOC - Detects hidden users from listed in the logon screen.yaml",
+    "output": "AnalyticsRules/PSOC - Detects hidden users from listed in the logon screen.json",
+    "ruleId": "7ca2965b-4e0e-4a40-ad16-b30818ec8993",
+    "displayName": "PSOC - Detects hidden users from listed in the logon screen"
+  },
+  {
+    "source": "PSOC - Detects potentially suspicious child processes of KeyScrambler.exe.yaml",
+    "output": "AnalyticsRules/PSOC - Detects potentially suspicious child processes of KeyScrambler.exe.json",
+    "ruleId": "9bd6d402-b493-4f5e-b6d1-36214b554261",
+    "displayName": "PSOC - Detects potentially suspicious child processes of KeyScrambler.exe"
+  },
+  {
+    "source": "PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters.json",
+    "ruleId": "aafb6056-d9bb-498f-a23f-237e4b5949bd",
+    "displayName": "PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters"
+  },
+  {
+    "source": "PSOC - Detects suspicious child processes of the Microsoft OneNote application.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious child processes of the Microsoft OneNote application.json",
+    "ruleId": "b909f085-9fb6-4d2f-82ca-4ab8c37c19c1",
+    "displayName": "PSOC - Detects suspicious child processes of the Microsoft OneNote application"
+  },
+  {
+    "source": "PSOC - Detects suspicious execution of Sysinternals PsSuspend.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious execution of Sysinternals PsSuspend.json",
+    "ruleId": "bb7921ab-004c-4bd2-a226-2a1fe50c40e3",
+    "displayName": "PSOC - Detects suspicious execution of Sysinternals PsSuspend"
+  },
+  {
+    "source": "PSOC - Detects suspicious execution of cab files.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious execution of cab files.json",
+    "ruleId": "72a105db-f1cf-4d0d-9560-af56604cc02b",
+    "displayName": "PSOC - Detects suspicious execution of cab files"
+  },
+  {
+    "source": "PSOC - Detects suspicious execution of fsutil.exe.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious execution of fsutil.exe.json",
+    "ruleId": "dc358086-4a48-4cf3-b9ea-f826984e690b",
+    "displayName": "PSOC - Detects suspicious execution of fsutil.exe"
+  },
+  {
+    "source": "PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs.json",
+    "ruleId": "0d541bf3-53a4-43e3-a8df-c07cba0889e0",
+    "displayName": "PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs"
+  },
+  {
+    "source": "PSOC - Detects suspicious windows cached domain credentials reg query.yaml",
+    "output": "AnalyticsRules/PSOC - Detects suspicious windows cached domain credentials reg query.json",
+    "ruleId": "5bbed44d-ae26-4950-93df-dafea8628718",
+    "displayName": "PSOC - Detects suspicious windows cached domain credentials reg query"
+  },
+  {
+    "source": "PSOC - Detects usage of AppLocker enumeration.yaml",
+    "output": "AnalyticsRules/PSOC - Detects usage of AppLocker enumeration.json",
+    "ruleId": "5397c0f7-2947-41f9-bee7-c6ae5cdf2cca",
+    "displayName": "PSOC - Detects usage of AppLocker enumeration"
+  },
+  {
+    "source": "PSOC - Disable Internal Tools or Feature in Registry.yaml",
+    "output": "AnalyticsRules/PSOC - Disable Internal Tools or Feature in Registry.json",
+    "ruleId": "886b6815-ce84-40a0-80eb-e895d65d85d2",
+    "displayName": "PSOC - Disable Internal Tools or Feature in Registry"
+  },
+  {
+    "source": "PSOC - Disabling of IP address-based cookie binding protection in Dataverse.yaml",
+    "output": "AnalyticsRules/PSOC - Disabling of IP address-based cookie binding protection in Dataverse.json",
+    "ruleId": "d7c9549c-7246-4555-8e53-d7b0db546764",
+    "displayName": "PSOC - Disabling of IP address-based cookie binding protection in Dataverse"
+  },
+  {
+    "source": "PSOC - Dumping of Sensitive Hives via Reg.exe.yaml",
+    "output": "AnalyticsRules/PSOC - Dumping of Sensitive Hives via Reg.exe.json",
+    "ruleId": "7273aac9-bb49-4b23-868f-f0789e5a2018",
+    "displayName": "PSOC - Dumping of Sensitive Hives via Reg.exe"
+  },
+  {
+    "source": "PSOC - Enable Remote Connection Between Anonymous Computer.yaml",
+    "output": "AnalyticsRules/PSOC - Enable Remote Connection Between Anonymous Computer.json",
+    "ruleId": "db27dadd-f05b-4a5d-b613-bf12c41dde4e",
+    "displayName": "PSOC - Enable Remote Connection Between Anonymous Computer"
+  },
+  {
+    "source": "PSOC - File Download Via CertOC.exe.yaml",
+    "output": "AnalyticsRules/PSOC - File Download Via CertOC.exe.json",
+    "ruleId": "7b017582-e692-41ee-87cc-9c8893e05808",
+    "displayName": "PSOC - File Download Via CertOC.exe"
+  },
+  {
+    "source": "PSOC - Fsutil Behavior Set SymlinkEvaluation.yaml",
+    "output": "AnalyticsRules/PSOC - Fsutil Behavior Set SymlinkEvaluation.json",
+    "ruleId": "8a06a984-dab0-426c-b07a-7f4a17a08c02",
+    "displayName": "PSOC - Fsutil Behavior Set SymlinkEvaluation"
+  },
+  {
+    "source": "PSOC - Kerberos spn request using GetUserSPNs.py script.yaml",
+    "output": "AnalyticsRules/PSOC - Kerberos spn request using GetUserSPNs.py script.json",
+    "ruleId": "bee8b2e0-eb76-4c33-8a5b-98d0a6c1f736",
+    "displayName": "PSOC - Kerberos spn request using GetUserSPNs.py script"
+  },
+  {
+    "source": "PSOC - LSA Protection Bypass.yaml",
+    "output": "AnalyticsRules/PSOC - LSA Protection Bypass.json",
+    "ruleId": "dba8c4d4-e89e-41a7-96dd-b71ded983f85",
+    "displayName": "PSOC - LSA Protection Bypass"
+  },
+  {
+    "source": "PSOC - LSASS process dumping activity post exploit CVE 2025-29824.yaml",
+    "output": "AnalyticsRules/PSOC - LSASS process dumping activity post exploit CVE 2025-29824.json",
+    "ruleId": "a9d0503c-ab2f-42d7-82d5-9c15e84d3b7e",
+    "displayName": "PSOC - LSASS process dumping activity post exploit CVE 2025-29824"
+  },
+  {
+    "source": "PSOC - MiniPlasma WERPipe Named Pipe Access.yaml",
+    "output": "AnalyticsRules/PSOC - MiniPlasma WERPipe Named Pipe Access.json",
+    "ruleId": "3f8a64f2-c8bd-42a3-9c59-53d4922d608a",
+    "displayName": "PSOC - MiniPlasma WERPipe Named Pipe Access"
+  },
+  {
+    "source": "PSOC - Monitor changes made to Sentinel by users outside of PSOC.yaml",
+    "output": "AnalyticsRules/PSOC - Monitor changes made to Sentinel by users outside of PSOC.json",
+    "ruleId": "f335cb43-0f1f-4c77-936d-3636d7f4f69b",
+    "displayName": "PSOC - Monitor changes made to Sentinel by users outside of PSOC"
+  },
+  {
+    "source": "PSOC - New Enumeration tool was installed.yaml",
+    "output": "AnalyticsRules/PSOC - New Enumeration tool was installed.json",
+    "ruleId": "8e383cfe-2d9e-4dea-9286-e8267ac3f99d",
+    "displayName": "PSOC - New Enumeration tool was installed"
+  },
+  {
+    "source": "PSOC - OFFICE 365 - Inbox Rule Mail Forward.yaml",
+    "output": "AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Mail Forward.json",
+    "ruleId": "0abf1c20-2f42-4054-9ce6-5ab772bd9260",
+    "displayName": "PSOC - OFFICE 365 - Inbox Rule Mail Forward"
+  },
+  {
+    "source": "PSOC - OFFICE 365 - Inbox Rule Suspicious Delete.yaml",
+    "output": "AnalyticsRules/PSOC - OFFICE 365 - Inbox Rule Suspicious Delete.json",
+    "ruleId": "e136631f-13ed-40fa-8526-8563bf103bea",
+    "displayName": "PSOC - OFFICE 365 - Inbox Rule Suspicious Delete"
+  },
+  {
+    "source": "PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed.yaml",
+    "output": "AnalyticsRules/PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed.json",
+    "ruleId": "b4168e27-056b-4818-846e-5b257cc4e690",
+    "displayName": "PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed"
+  },
+  {
+    "source": "PSOC - OFFICE 365 - New Inbox Rule to Auto Delete Email.yaml",
+    "output": "AnalyticsRules/PSOC - OFFICE 365 - New Inbox Rule to Auto Delete Email.json",
+    "ruleId": "35c3fc68-d9f6-4838-aa14-ede7660a17cb",
+    "displayName": "PSOC - OFFICE 365 [New Inbox Rule to Auto Delete Email]"
+  },
+  {
+    "source": "PSOC - OFFICE 365 New Inbox Rule - MoveToFolder RSS or Archive or Conversation History.yaml",
+    "output": "AnalyticsRules/PSOC - OFFICE 365 New Inbox Rule - MoveToFolder RSS or Archive or Conversation History.json",
+    "ruleId": "afcbedd2-b55e-4158-853f-23a3e3d85c85",
+    "displayName": "PSOC - OFFICE 365 [New Inbox Rule - MoveToFolder RSS or Archive or Conversation History]"
+  },
+  {
+    "source": "PSOC - Office Macros Warning Disabled.yaml",
+    "output": "AnalyticsRules/PSOC - Office Macros Warning Disabled.json",
+    "ruleId": "2b5068c8-0aa3-4ae7-8f50-2011572acf3a",
+    "displayName": "PSOC - Office Macros Warning Disabled"
+  },
+  {
+    "source": "PSOC - Possible  Microsoft Office 0-day vulnerability (CVE-2022-30190) Detected.yaml",
+    "output": "AnalyticsRules/PSOC - Possible  Microsoft Office 0-day vulnerability (CVE-2022-30190) Detected.json",
+    "ruleId": "d444ab27-7d67-4c30-ae8d-013fd64cbac7",
+    "displayName": "PSOC - Possible  Microsoft Office 0-day vulnerability (CVE-2022-30190) Detected"
+  },
+  {
+    "source": "PSOC - Possible Hoaxshell activity detected.yaml",
+    "output": "AnalyticsRules/PSOC - Possible Hoaxshell activity detected.json",
+    "ruleId": "9fc900d7-3b23-4b68-83ad-447b6970b822",
+    "displayName": "PSOC - Possible Hoaxshell activity detected"
+  },
+  {
+    "source": "PSOC - Possible Uninstalling of Antiviruses.yaml",
+    "output": "AnalyticsRules/PSOC - Possible Uninstalling of Antiviruses.json",
+    "ruleId": "34bb59a0-7e99-4486-8868-dd8243413090",
+    "displayName": "PSOC - Possible Uninstalling of Antiviruses"
+  },
+  {
+    "source": "PSOC - Possible credential dumping using Silent Process Exit (via registry).yaml",
+    "output": "AnalyticsRules/PSOC - Possible credential dumping using Silent Process Exit (via registry).json",
+    "ruleId": "d9253fa1-4d0e-4d20-b5e8-65066e556f4e",
+    "displayName": "PSOC - Possible credential dumping using Silent Process Exit (via registry)"
+  },
+  {
+    "source": "PSOC - Possible persistence via registry key detected.yaml",
+    "output": "AnalyticsRules/PSOC - Possible persistence via registry key detected.json",
+    "ruleId": "fde3c86f-9920-49ba-a563-615096de4ae0",
+    "displayName": "PSOC - Possible persistence via registry key detected"
+  },
+  {
+    "source": "PSOC - Possible windows defender disable activity.yaml",
+    "output": "AnalyticsRules/PSOC - Possible windows defender disable activity.json",
+    "ruleId": "4c77ff12-1133-4db3-85f5-d485c9529438",
+    "displayName": "PSOC - Possible windows defender disable activity"
+  },
+  {
+    "source": "PSOC - Potential Compromise of Safeboot Registry key.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Compromise of Safeboot Registry key.json",
+    "ruleId": "cb9af3df-7dca-4bb5-abd9-f4c387608187",
+    "displayName": "PSOC - Potential Compromise of Safeboot Registry key"
+  },
+  {
+    "source": "PSOC - Potential Impacket Lateral Movement Activity.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Impacket Lateral Movement Activity.json",
+    "ruleId": "7b33f149-e270-42e8-b64c-a074a02b9e7f",
+    "displayName": "PSOC - Potential Impacket Lateral Movement Activity"
+  },
+  {
+    "source": "PSOC - Potential KamiKakaBot Activity - Lure Document Execution.yaml",
+    "output": "AnalyticsRules/PSOC - Potential KamiKakaBot Activity - Lure Document Execution.json",
+    "ruleId": "8b694eca-83ed-472d-a5c7-863e41352d01",
+    "displayName": "PSOC - Potential KamiKakaBot Activity - Lure Document Execution"
+  },
+  {
+    "source": "PSOC - Potential Persistence Via Logon Scripts - Registry.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Persistence Via Logon Scripts - Registry.json",
+    "ruleId": "11d5dec6-c6c5-4713-b023-ae2f27fe126e",
+    "displayName": "PSOC - Potential Persistence Via Logon Scripts - Registry"
+  },
+  {
+    "source": "PSOC - Potential Raspberry Robin CPL Execution Activity.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Raspberry Robin CPL Execution Activity.json",
+    "ruleId": "e4bf8c45-6e28-4f9b-9d07-ac83c49cac6a",
+    "displayName": "PSOC - Potential Raspberry Robin CPL Execution Activity"
+  },
+  {
+    "source": "PSOC - Potential Recon Activity Via Nltest.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Recon Activity Via Nltest.EXE.json",
+    "ruleId": "2d263513-7b7b-49b2-b0cc-fab58d6f8aa6",
+    "displayName": "PSOC - Potential Recon Activity Via Nltest.EXE"
+  },
+  {
+    "source": "PSOC - Potential Shadow Credentials added to AD Object.yaml",
+    "output": "AnalyticsRules/PSOC - Potential Shadow Credentials added to AD Object.json",
+    "ruleId": "c0e48913-1a4e-4573-8a65-9e0eab413e14",
+    "displayName": "PSOC - Potential Shadow Credentials added to AD Object"
+  },
+  {
+    "source": "PSOC - Potentially Suspicious Electron Application CommandLine.yaml",
+    "output": "AnalyticsRules/PSOC - Potentially Suspicious Electron Application CommandLine.json",
+    "ruleId": "375a51c5-67c1-4cd9-99e6-2eda78bbf7f9",
+    "displayName": "PSOC - Potentially Suspicious Electron Application CommandLine"
+  },
+  {
+    "source": "PSOC - PowerDrop Malware Strings.yaml",
+    "output": "AnalyticsRules/PSOC - PowerDrop Malware Strings.json",
+    "ruleId": "1e2ecb9c-382d-4ee4-9ae2-388a23c5454a",
+    "displayName": "PSOC - PowerDrop Malware Strings"
+  },
+  {
+    "source": "PSOC - PowerShell O365 Audit commands.yaml",
+    "output": "AnalyticsRules/PSOC - PowerShell O365 Audit commands.json",
+    "ruleId": "35e254d1-7419-412c-aef2-54212f65d2d6",
+    "displayName": "PSOC - PowerShell O365 Audit commands"
+  },
+  {
+    "source": "PSOC - Python Function Execution Security Warning Disabled In Excel.yaml",
+    "output": "AnalyticsRules/PSOC - Python Function Execution Security Warning Disabled In Excel.json",
+    "ruleId": "ec304149-847c-482b-a6a6-2710b1fac8f3",
+    "displayName": "PSOC - Python Function Execution Security Warning Disabled In Excel"
+  },
+  {
+    "source": "PSOC - Remote Access Tool - MeshAgent Command Execution via MeshCentral.yaml",
+    "output": "AnalyticsRules/PSOC - Remote Access Tool - MeshAgent Command Execution via MeshCentral.json",
+    "ruleId": "5969b0e3-9abe-4954-88c0-e1bab2f3cff5",
+    "displayName": "PSOC - Remote Access Tool - MeshAgent Command Execution via MeshCentral"
+  },
+  {
+    "source": "PSOC - Rule for Suspicious Certutil Commands usage.yaml",
+    "output": "AnalyticsRules/PSOC - Rule for Suspicious Certutil Commands usage.json",
+    "ruleId": "8564d490-d641-41c9-b898-ce7090c71405",
+    "displayName": "PSOC - Rule for Suspicious Certutil Commands usage"
+  },
+  {
+    "source": "PSOC - Scheduled Task creation during Non Business Hours.yaml",
+    "output": "AnalyticsRules/PSOC - Scheduled Task creation during Non Business Hours.json",
+    "ruleId": "519cc3e9-8f9d-4cbe-9947-b3affb274fe3",
+    "displayName": "PSOC - Scheduled Task creation during Non Business Hours"
+  },
+  {
+    "source": "PSOC - Sensitive File Dump Via Wbadmin.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Sensitive File Dump Via Wbadmin.EXE.json",
+    "ruleId": "574ad40c-139e-4442-98f8-bcecbf8653b0",
+    "displayName": "PSOC - Sensitive File Dump Via Wbadmin.EXE"
+  },
+  {
+    "source": "PSOC - Sentinel Monitoring Services Down.yaml",
+    "output": "AnalyticsRules/PSOC - Sentinel Monitoring Services Down.json",
+    "ruleId": "45bdfab8-346d-42c6-9444-ba281fdfa5cb",
+    "displayName": "PSOC - Sentinel Monitoring Services Down"
+  },
+  {
+    "source": "PSOC - Sticky Key backdoors attack.yaml",
+    "output": "AnalyticsRules/PSOC - Sticky Key backdoors attack.json",
+    "ruleId": "8ecadf37-9dd7-49bc-bed6-1a1a7d887980",
+    "displayName": "PSOC - Sticky Key backdoors attack"
+  },
+  {
+    "source": "PSOC - Suspicious Command Line Containing Right-to-Left Override.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Command Line Containing Right-to-Left Override.json",
+    "ruleId": "7e0a3b66-8934-4704-a1d4-8b05e36ef3df",
+    "displayName": "PSOC - Suspicious Command Line Containing Right-to-Left Override"
+  },
+  {
+    "source": "PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh.json",
+    "ruleId": "67a83787-530e-4db9-b01f-b7c6e39eb5f3",
+    "displayName": "PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh"
+  },
+  {
+    "source": "PSOC - Suspicious Java Child Process.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Java Child Process.json",
+    "ruleId": "4f2a143a-774e-42ea-833c-fc0a8bf72f44",
+    "displayName": "PSOC - Suspicious Java Child Process"
+  },
+  {
+    "source": "PSOC - Suspicious JavaScript Execution via Deno.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious JavaScript Execution via Deno.json",
+    "ruleId": "dedf11d3-b30e-4423-a106-fa4a57f09897",
+    "displayName": "PSOC - Suspicious JavaScript Execution via Deno"
+  },
+  {
+    "source": "PSOC - Suspicious LOLBin Persistence activity.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious LOLBin Persistence activity.json",
+    "ruleId": "3ca485d6-7f3e-430e-89af-229e992bae61",
+    "displayName": "PSOC - Suspicious LOLBin Persistence activity"
+  },
+  {
+    "source": "PSOC - Suspicious Nslookup usage using Powershell.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Nslookup usage using Powershell.json",
+    "ruleId": "70cdbd05-0c15-44e0-abf7-85bbafe8c171",
+    "displayName": "PSOC - Suspicious Nslookup usage using Powershell"
+  },
+  {
+    "source": "PSOC - Suspicious OS Credential Dumping using NTDS.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious OS Credential Dumping using NTDS.json",
+    "ruleId": "af74056c-35c5-433d-a48a-4650b2aa7e59",
+    "displayName": "PSOC - Suspicious OS Credential Dumping using NTDS"
+  },
+  {
+    "source": "PSOC - Suspicious PowerShell Download Cradle.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious PowerShell Download Cradle.json",
+    "ruleId": "65927abe-f01d-44bc-915f-26eb0469f96a",
+    "displayName": "PSOC - Suspicious PowerShell Download Cradle"
+  },
+  {
+    "source": "PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation.json",
+    "ruleId": "7bd2c1c5-c963-41ff-abaf-eae4bb3e6bce",
+    "displayName": "PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation"
+  },
+  {
+    "source": "PSOC - Suspicious Reg Add BitLocker via reg.exe.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Reg Add BitLocker via reg.exe.json",
+    "ruleId": "41c2e410-2ba2-49fc-90d8-3db49e9b23ea",
+    "displayName": "PSOC - Suspicious Reg Add BitLocker via reg.exe"
+  },
+  {
+    "source": "PSOC - Suspicious Registry created by Dragonforce ransomware.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Registry created by Dragonforce ransomware.json",
+    "ruleId": "24fbd12c-2e1b-4548-8cab-fe3862601382",
+    "displayName": "PSOC - Suspicious Registry created by Dragonforce ransomware"
+  },
+  {
+    "source": "PSOC - Suspicious Rundll32 Execution With Image Extension.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Rundll32 Execution With Image Extension.json",
+    "ruleId": "579df582-e82c-4b5d-bd74-8dd3cb498ee1",
+    "displayName": "PSOC - Suspicious Rundll32 Execution With Image Extension"
+  },
+  {
+    "source": "PSOC - Suspicious Security Service Disabled.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Security Service Disabled.json",
+    "ruleId": "c39da402-bd03-43c1-b7d2-47a7bcc4402b",
+    "displayName": "PSOC - Suspicious Security Service Disabled"
+  },
+  {
+    "source": "PSOC - Suspicious Shells Spawned by SQL Server.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Shells Spawned by SQL Server.json",
+    "ruleId": "f4eb19fd-575a-4d28-a066-c3027fcab2b5",
+    "displayName": "PSOC - Suspicious Shells Spawned by SQL Server"
+  },
+  {
+    "source": "PSOC - Suspicious Use of attrib.exe to Hide Files.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Use of attrib.exe to Hide Files.json",
+    "ruleId": "1876c9bd-f353-4286-a149-f7ee2de627dc",
+    "displayName": "PSOC - Suspicious Use of attrib.exe to Hide Files"
+  },
+  {
+    "source": "PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE.json",
+    "ruleId": "17728b04-ee09-412c-8e72-2f87c2239ad0",
+    "displayName": "PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE"
+  },
+  {
+    "source": "PSOC - Suspicious Windows defender logging disable.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious Windows defender logging disable.json",
+    "ruleId": "1b2ee5cb-02b0-4d5a-a07f-08374df4db4f",
+    "displayName": "PSOC - Suspicious Windows defender logging disable"
+  },
+  {
+    "source": "PSOC - Suspicious command to list Anti-Virus product installed.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious command to list Anti-Virus product installed.json",
+    "ruleId": "e9a0bdf7-5631-4e0b-b8af-90e20ae5a833",
+    "displayName": "PSOC - Suspicious command to list Anti-Virus product installed"
+  },
+  {
+    "source": "PSOC - Suspicious disabling of AntiVirus via net command.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious disabling of AntiVirus via net command.json",
+    "ruleId": "f94c0943-6879-49f8-bf33-fae1dff1c09a",
+    "displayName": "PSOC - Suspicious disabling of AntiVirus via net command"
+  },
+  {
+    "source": "PSOC - Suspicious execution of Kapeka Backdoor.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious execution of Kapeka Backdoor.json",
+    "ruleId": "0956987b-1c86-4ae3-bca1-bec84e494d17",
+    "displayName": "PSOC - Suspicious execution of Kapeka Backdoor"
+  },
+  {
+    "source": "PSOC - Suspicious firewall configuration activity.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious firewall configuration activity.json",
+    "ruleId": "9ea47595-3d19-41ff-b731-3db358986eef",
+    "displayName": "PSOC - Suspicious firewall configuration activity"
+  },
+  {
+    "source": "PSOC - Suspicious process launched by malicious JavaScript.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious process launched by malicious JavaScript.json",
+    "ruleId": "02215a60-438e-479e-b50d-44e87825e733",
+    "displayName": "PSOC - Suspicious process launched by malicious JavaScript"
+  },
+  {
+    "source": "PSOC - Suspicious remote wmi command attempt.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious remote wmi command attempt.json",
+    "ruleId": "c2b16588-0185-4f96-9066-4c504ba5fd3c",
+    "displayName": "PSOC - Suspicious remote wmi command attempt"
+  },
+  {
+    "source": "PSOC - Suspicious system language discovery command.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious system language discovery command.json",
+    "ruleId": "aeb53318-80da-4480-8474-34f964f11d3e",
+    "displayName": "PSOC - Suspicious system language discovery command"
+  },
+  {
+    "source": "PSOC - Suspicious usage of Cobalt Strike psexec command.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious usage of Cobalt Strike psexec command.json",
+    "ruleId": "0a06c000-4b5b-4810-9ea1-96ef74de19ef",
+    "displayName": "PSOC - Suspicious usage of Cobalt Strike psexec command"
+  },
+  {
+    "source": "PSOC - Suspicious usage of WMI.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious usage of WMI.json",
+    "ruleId": "e2296311-e8d3-4efe-ac10-9b0508ad880d",
+    "displayName": "PSOC - Suspicious usage of WMI"
+  },
+  {
+    "source": "PSOC - Suspicious usage of bcdedit.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious usage of bcdedit.json",
+    "ruleId": "75d338cf-6636-4638-89dc-04636cce69cc",
+    "displayName": "PSOC - Suspicious usage of bcdedit"
+  },
+  {
+    "source": "PSOC - Suspicious usage of lazagne tool via commandline.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious usage of lazagne tool via commandline.json",
+    "ruleId": "89eb7c12-c0b3-4559-a4da-56ed127a0bdc",
+    "displayName": "PSOC - Suspicious usage of lazagne tool via commandline"
+  },
+  {
+    "source": "PSOC - Suspicious wermgr.exe Parent Process with Known MiniPlasma exploit.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious wermgr.exe Parent Process with Known MiniPlasma exploit.json",
+    "ruleId": "94948bde-c76d-46b8-9f23-ed1c5d67495e",
+    "displayName": "PSOC - Suspicious wermgr.exe Parent Process with Known MiniPlasma exploit"
+  },
+  {
+    "source": "PSOC - Suspicious wevtutil Usage.yaml",
+    "output": "AnalyticsRules/PSOC - Suspicious wevtutil Usage.json",
+    "ruleId": "e01deeff-c9fd-433e-98f7-52fd46b2bbcb",
+    "displayName": "PSOC - Suspicious wevtutil Usage"
+  },
+  {
+    "source": "PSOC - Tunneling Tool Execution.yaml",
+    "output": "AnalyticsRules/PSOC - Tunneling Tool Execution.json",
+    "ruleId": "9880b77c-105a-4b78-b946-b0433dcb72f1",
+    "displayName": "PSOC - Tunneling Tool Execution"
+  },
+  {
+    "source": "PSOC - Tunneling Tool ligolo-ng Detected on Windows Hosts.yaml",
+    "output": "AnalyticsRules/PSOC - Tunneling Tool ligolo-ng Detected on Windows Hosts.json",
+    "ruleId": "32a5419c-a563-47c0-bd5f-8b3684ff09a0",
+    "displayName": "PSOC - Tunneling Tool ligolo-ng Detected on Windows Hosts"
+  },
+  {
+    "source": "PSOC - UAC Notification Disabled.yaml",
+    "output": "AnalyticsRules/PSOC - UAC Notification Disabled.json",
+    "ruleId": "11735053-87b5-4aa5-83c1-fed860052a3a",
+    "displayName": "PSOC - UAC Notification Disabled"
+  },
+  {
+    "source": "PSOC - UAC bypass via Fodhelper.yaml",
+    "output": "AnalyticsRules/PSOC - UAC bypass via Fodhelper.json",
+    "ruleId": "561606b7-4f82-42a6-9483-fd5d3dd8ff02",
+    "displayName": "PSOC - UAC bypass via Fodhelper"
+  },
+  {
+    "source": "PSOC - Unsigned or Untrusted DLL Loaded from Suspicious Path.yaml",
+    "output": "AnalyticsRules/PSOC - Unsigned or Untrusted DLL Loaded from Suspicious Path.json",
+    "ruleId": "775613d0-5ea5-412f-ae6d-1fa93ae2d472",
+    "displayName": "PSOC - Unsigned or Untrusted DLL Loaded from Suspicious Path"
+  },
+  {
+    "source": "PSOC - WMImplantCIMplant Detection rule.yaml",
+    "output": "AnalyticsRules/PSOC - WMImplantCIMplant Detection rule.json",
+    "ruleId": "9171eb02-7132-4033-aea6-97eed9166454",
+    "displayName": "WMImplant/CIMplant Detection rule"
+  },
+  {
+    "source": "PSOC - WinAD PEAs Privilege Escalation Script Detected.yaml",
+    "output": "AnalyticsRules/PSOC - WinAD PEAs Privilege Escalation Script Detected.json",
+    "ruleId": "43dfb01d-dad8-4b37-be8d-55821484d98c",
+    "displayName": "PSOC - Win/AD PEAs Privilege Escalation Script Detected"
+  },
+  {
+    "source": "PSOC - WinRM spawning a suspicious child process.yaml",
+    "output": "AnalyticsRules/PSOC - WinRM spawning a suspicious child process.json",
+    "ruleId": "1416d4f8-833f-421d-b0b8-77b790e40845",
+    "displayName": "PSOC - WinRM spawning a suspicious child process"
+  },
+  {
+    "source": "PSOC - Windows Credential Manager activity detected.yaml",
+    "output": "AnalyticsRules/PSOC - Windows Credential Manager activity detected.json",
+    "ruleId": "0109ad3b-1746-42ee-ae6a-d87d7dee2c84",
+    "displayName": "PSOC - Windows Credential Manager activity detected"
+  },
+  {
+    "source": "PSOC - Windows Pass the Hash Activity.yaml",
+    "output": "AnalyticsRules/PSOC - Windows Pass the Hash Activity.json",
+    "ruleId": "a59e3e8c-ecba-46a1-b213-9c084fa6200f",
+    "displayName": "PSOC - Windows Pass the Hash Activity"
+  },
+  {
+    "source": "PSOC - Windows Port Forwarding Activity Via SSH.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Windows Port Forwarding Activity Via SSH.EXE.json",
+    "ruleId": "19ddcd3d-35e1-462c-ab7a-a73d9b1f0d88",
+    "displayName": "PSOC - Windows Port Forwarding Activity Via SSH.EXE"
+  },
+  {
+    "source": "PSOC - Windows Suspicious File Download From IP Via Curl.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Curl.EXE.json",
+    "ruleId": "b5dfdfa2-418b-429e-b432-012bed2635cc",
+    "displayName": "PSOC - Windows Suspicious File Download From IP Via Curl.EXE"
+  },
+  {
+    "source": "PSOC - Windows Suspicious File Download From IP Via Wget.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Windows Suspicious File Download From IP Via Wget.EXE.json",
+    "ruleId": "04328921-a902-4f44-8e07-3025a1781762",
+    "displayName": "PSOC - Windows Suspicious File Download From IP Via Wget.EXE"
+  },
+  {
+    "source": "PSOC - YellowKey BitLocker Bypass Detected.yaml",
+    "output": "AnalyticsRules/PSOC - YellowKey BitLocker Bypass Detected.json",
+    "ruleId": "56164925-976d-4429-9f95-6af770e855c1",
+    "displayName": "PSOC - YellowKey BitLocker Bypass Detected"
+  },
+  {
+    "source": "PSOC - print.exe binary to copy credential files.yaml",
+    "output": "AnalyticsRules/PSOC - print.exe binary to copy credential files.json",
+    "ruleId": "801a169b-9c71-439c-a096-d04298f34fa0",
+    "displayName": "PSOC - print.exe binary to copy credential files"
+  },
+  {
+    "source": "PSOC- Suspicious Entra ID Token Request for Device Registration Service.yaml",
+    "output": "AnalyticsRules/PSOC- Suspicious Entra ID Token Request for Device Registration Service.json",
+    "ruleId": "620b612a-08c8-44fc-91be-62ce3fb05a76",
+    "displayName": "PSOC - Suspicious Entra ID Token Request for Device Registration Service"
+  }
+]

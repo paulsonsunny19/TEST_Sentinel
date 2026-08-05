@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Python Function Execution Security Warning Disabled In Excel.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "ec304149-847c-482b-a6a6-2710b1fac8f3"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Python Function Execution Security Warning Disabled In Excel",
+        "description": "Detects the removal of the registry key that controls script warning in excel",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//Detects the removal of the registry key that controls script warning in excel\nlet eventtype = dynamic([\"RegistryValueSet\"]);\nlet RegistryValue = dynamic([\"PythonFunctionWarnings\"]);\nlet RegistryValueData = dynamic([\"DWORD (0x00000000)\"]);\n_Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrydata_has_any=RegistryValueData)\n| where RegistryKey contains \"\\\\microsoft\\\\office\" and RegistryKey contains \"\\\\excel\\\\security\"\n| extend\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    CommandLine = tostring(column_ifexists(\"ActingProcessCommandLine\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ActingProcessId\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

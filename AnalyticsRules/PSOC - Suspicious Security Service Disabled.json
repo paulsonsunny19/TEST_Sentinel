@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious Security Service Disabled.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "c39da402-bd03-43c1-b7d2-47a7bcc4402b"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious Security Service Disabled",
+        "description": "Detects modification of the registry to disable security services",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//Detects modification of the registry to disable security services\nlet eventtype = dynamic([\"RegistryValueSet\"]);\nlet RegistryValue = dynamic([\"Start\"]);\nlet RegistryValueData = dynamic([\"DWORD (0x00000004)\"]);\n_Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrydata_has_any=RegistryValueData)\t\t\n| where RegistryKey has_any (\"HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Services\",\"HKLM\\\\SYSTEM\\\\ControlSet001\\\\Services\",\"HKLM\\\\SYSTEM\\\\ControlSet002 \\\\Services\")\n| where RegistryKey has_any (\"appidsvc\",\"msmpsvc\",\"nissrv\",\"securityhealthservice\",\"sense\",\"usosvc\",\"wdboot\",\"wdfilter\",\"wdnisdrv\",\"wdnissvc\",\"windefend\",\"wscsvc\",\"wuauserv\")\n| extend\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    CommandLine = tostring(column_ifexists(\"ActingProcessCommandLine\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ActingProcessId\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1112"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

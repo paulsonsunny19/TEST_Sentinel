@@ -1,0 +1,99 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious JavaScript Execution via Deno.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "dedf11d3-b30e-4423-a106-fa4a57f09897"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious JavaScript Execution via Deno",
+        "description": "Deno is a legitimate JavaScript/TypeScript runtime.  It is used to run scripts, build web servers, create command-line tools, and compile code into self-contained executables.\nThis rule fires when a Deno process is started with a command line matching suspicious patterns: javascript with base64, eval(, http, or javascript import. \nSuch patterns are commonly used to run inline or remote scripts and can indicate abuse.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Deno is a legitimate JavaScript/TypeScript runtime.  It is used to run scripts, build web servers, create command-line tools, and compile code into self-contained executables. \n// This rule fires when a Deno process is started with a command line matching suspicious patterns: javascript with base64, eval(, http, or javascript import. \n// Such patterns are commonly used to run inline or remote scripts and can indicate abuse.\nlet deno_javascript_base64 = \nSecurityEvent\n| where Process has \"deno.exe\"\n| where CommandLine has_all (\"javascript\",\"base64\");\nlet deno_javascript_eval = \nSecurityEvent\n| where Process has \"deno.exe\"\n| where CommandLine has_all (\"eval\",\"http\",\"javascript\",\"import\");\nunion isfuzzy=true\ndeno_javascript_base64, deno_javascript_eval\n| extend\n    ComputerName = tostring(column_ifexists(\"Computer\", \"\")),\n    Account = tostring(\n        coalesce(\n            column_ifexists(\"SubjectUserName\", \"\"),\n            column_ifexists(\"Account\", \"\")\n        )\n    ),\n    CommandLineMapped = tostring(column_ifexists(\"ServiceFileName\", \"\"))\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T1059.007"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "ComputerName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

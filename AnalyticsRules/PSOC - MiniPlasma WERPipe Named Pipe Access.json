@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - MiniPlasma WERPipe Named Pipe Access.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "3f8a64f2-c8bd-42a3-9c59-53d4922d608a"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - MiniPlasma WERPipe Named Pipe Access",
+        "description": "Detects access to the \"MiniPlasmaWERPipe\" named pipe, a known indicator of the MiniPlasma Windows privilege-escalation zero-day.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "DeviceEvents\n| where ActionType == \"NamedPipeEvent\"\n| where AdditionalFields has \"MiniPlasmaWERPipe\"\n| project\n    Timestamp,\n    DeviceName,\n    ActionType,\n    InitiatingProcessFileName,\n    InitiatingProcessSHA256,\n    InitiatingProcessId,\n    InitiatingProcessCommandLine,\n    AccountName,\n    PipeName = parse_json(AdditionalFields).PipeName  // Only parse when needed\n| extend\n  Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n  Account = tostring(column_ifexists(\"AccountName\", \"\")),\n  ProcessId = tostring(column_ifexists(\"InitiatingProcessId\", \"\")),\n  CommandLineMapped = tostring(column_ifexists(\"InitiatingProcessCommandLine\", \"\"))\n| where PipeName == @\"\\Device\\NamedPipe\\MiniPlasmaWERPipe\"\n| sort by Timestamp desc\n| take 10  // Limit results\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "PrivilegeEscalation"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Potential KamiKakaBot Activity - Lure Document Execution.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "8b694eca-83ed-472d-a5c7-863e41352d01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Potential KamiKakaBot Activity - Lure Document Execution",
+        "description": "APT 'DarkPink' use kamikakabot in social engineering attacks",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Detects execution of kamikaka bot using word doc\nlet cmd_all = dynamic([\"/c\",\".lnk ~\",\"Start Menu\\\\Programs\\\\Word\"]);\n_Im_ProcessCreate(commandline_has_all=cmd_all,targetprocess_has_any=\"cmd.exe\")\n| where CommandLine matches regex @\".*\\.doc$\"\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T1059"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

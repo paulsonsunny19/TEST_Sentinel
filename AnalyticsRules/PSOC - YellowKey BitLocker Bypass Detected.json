@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - YellowKey BitLocker Bypass Detected.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "56164925-976d-4429-9f95-6af770e855c1"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - YellowKey BitLocker Bypass Detected",
+        "description": "Detects YellowKey Bitlocker Encryption bypass which allows attackers with physical access to bypass BitLocker encryption on Windows 11 and Windows Server 2022/2025",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "DeviceFileEvents\n| where ActionType in (\"FileCreated\", \"FileModified\", \"FileRenamed\")\n| where isnotempty(FolderPath)\n| where FolderPath has @\"\\System Volume Information\\FsTx\\\"\n     or FolderPath has @\"\\System Volume Information\\FsTx$\"\n     or FileName =~ \"FsTx\"\n| extend staging_target = FolderPath has \"EFI\" or FolderPath matches regex @\"(?i)^[D-Z]:\\\\System Volume Information\" or FolderPath has \"System_Volume_Information\"\n  | project TimeGenerated, \n          DeviceName, \n          InitiatingProcessAccountName,\n          InitiatingProcessFileName, \n          InitiatingProcessFolderPath, \n          InitiatingProcessCommandLine,\n          FolderPath, \n          FileName, \n          ActionType, \n          staging_target\n| extend\n    Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n    Account = tostring(column_ifexists(\"InitiatingProcessAccountName\", \"\")),\n    CommandLineMapped = tostring(column_ifexists(\"InitiatingProcessCommandLine\", \"\"))\n| order by TimeGenerated desc",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion",
+          "PrivilegeEscalation"
+        ],
+        "techniques": [
+          "T1068",
+          "T1562.001"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

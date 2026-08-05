@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious usage of WMI.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "e2296311-e8d3-4efe-ac10-9b0508ad880d"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious usage of WMI",
+        "description": "This rule captures various suspicious uses of WMI that attackers may use.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "//wmic allows admins to run remote commands and manage systems remotely.\n//while this has been superceded by Powershell, attackers still abuse wmic to move laterally or escalate privileges.\n//this rule has a number of queries designed to match suspicious activity, and will trigger an incident if any one of them is matched.\n// Detects the suspicious use of legitimate wmic.exe to excute processes\nlet parent_processes = dynamic([\"cmd.exe\",\"powershell.exe\"]);\nlet cmd_all1 = dynamic([\"process call create\"]);\nlet query1 = \n_Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all1,targetprocess_has_any=\"wmic.exe\");\n// Detects recon carried out using wmic\nlet cmd_all2 = dynamic([\"wmic\",\"process\",\"get\",\"caption\",\"executable path\"]);\nlet query2 = \n_Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all2,targetprocess_has_any=\"wmic.exe\");\n// Detects listing of remote services\nlet cmd_all3 = dynamic([\"wmic\",\"node\",\"service\",\"where\"]);\nlet query3 = \n_Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all3,targetprocess_has_any=\"wmic.exe\");\n// Detects wmic used as a recon tool\nlet cmd_all4 = dynamic([\"wmic\",\"qfe\",\"get\",\"description\",\"installedOn\"]);\nlet query4 = \n_Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all4,targetprocess_has_any=\"wmic.exe\");\n// Detects the enumeration of users \nlet cmd_all5 = dynamic([\"wmic\",\"useraccount\",\"get /ALL\"]);\nlet query5 = \n_Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all5,targetprocess_has_any=\"wmic.exe\");\nunion isfuzzy=true\nquery1,query2,query3,query4,query5\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T1047"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Suspicious process launched by malicious JavaScript.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "02215a60-438e-479e-b50d-44e87825e733"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Suspicious process launched by malicious JavaScript",
+        "description": "Shai Hulud 2.0 supply chain attack",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Shai Hulud 2.0 supply chain attack\n\nDeviceProcessEvents | where InitiatingProcessFileName in~ (\"node\", \"node.exe\") and InitiatingProcessCommandLine endswith \".js\"\n| where (FileName in~ (\"bun\", \"bun.exe\") and ProcessCommandLine has \".js\")\n    or (FileName  in~ (\"cmd.exe\") and ProcessCommandLine has_any (\"where bun\", \"irm \", \"[Environment]::GetEnvironmentVariable('PATH'\", \"|iex\"))\n    or (ProcessCommandLine in~ (\"sh\", \"dash\", \"bash\") and ProcessCommandLine has_any (\"which bun\", \".bashrc && echo $PATH\", \"https://bun.sh/install\"))\n| where ProcessCommandLine !contains \"bun\" and ProcessCommandLine !contains \"\\\\\" and ProcessCommandLine !contains \"--\"\n| extend\n    Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n    Account = tostring(column_ifexists(\"InitiatingProcessAccountName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ProcessId\", \"\")),\n    CommandLineMapped = tostring(column_ifexists(\"ProcessCommandLine\", \"\"))\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "InitialAccess"
+        ],
+        "techniques": [
+          "T0862"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

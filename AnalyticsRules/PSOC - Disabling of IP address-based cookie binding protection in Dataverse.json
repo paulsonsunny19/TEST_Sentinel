@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Disabling of IP address-based cookie binding protection in Dataverse.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "d7c9549c-7246-4555-8e53-d7b0db546764"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Disabling of IP address-based cookie binding protection in Dataverse",
+        "description": "Identifies disabling of cookie binding protection in Dataverse. See https://docs.microsoft.com/power-platform/admin/block-cookie-replay-attack",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "DataverseActivity\n| where Message == \"Update\" and EntityName == \"organization\"\n| mv-expand Fields\n| where Fields.Name == \"enableipbasedcookiebinding\" and Fields.Value == 'False'\n| summarize CookieBindingDisabled = min(TimeGenerated)\n    by CookieBindingDisabledBy = UserId, InstanceUrl\n| extend\n    Account = tostring(column_ifexists(\"CookieBindingDisabledBy\",\"\"))\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT2H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1629"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          }
+        ],
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "customDetails": {},
+        "alertDetailsOverride": {
+          "alertDisplayNameFormat": "Dataverse -IP address-based cookie binding disabled",
+          "alertDescriptionFormat": "IP address-based cookie binding was disabled by in {{InstanceUrl}}."
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

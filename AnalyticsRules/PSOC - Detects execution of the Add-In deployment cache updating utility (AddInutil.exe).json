@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe).yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "ccb36182-fac5-4e21-a9fe-c58e2338283a"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe)",
+        "description": "Detects execution of the Add-In deployment cache updating utility (AddInutil.exe) with Addinroot. An adversary may execute AddinUtil.exe that point to the adversary's Addins.Store payload.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Detects execution of the Add-In deployment cache updating utility (AddInutil.exe) with Addinroot. An adversary may execute AddinUtil.exe that point to the adversary's Addins.Store payload.\nSecurityEvent\n| where Process has \"AddInUtil.exe\"\n| where ParentProcessName has_any (\"cmd.exe\",\"powershell.exe\")\n| where CommandLine matches regex @\"(?i)\\-AddinRoot\\:\\.\"\n  | extend\n    ComputerName = tostring(column_ifexists(\"Computer\", \"\")),\n    Account = tostring(\n        coalesce(\n            column_ifexists(\"SubjectUserName\", \"\"),\n            column_ifexists(\"Account\", \"\")\n        )\n    ),\n    CommandLineMapped = tostring(column_ifexists(\"ServiceFileName\", \"\"))\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1218"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "ComputerName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

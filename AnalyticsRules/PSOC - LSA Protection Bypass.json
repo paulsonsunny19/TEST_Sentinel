@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - LSA Protection Bypass.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "dba8c4d4-e89e-41a7-96dd-b71ded983f85"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - LSA Protection Bypass",
+        "description": "LSASS (Local Security Authority Subsystem Service) is a critical Windows process responsible for enforcing security policies. Attackers often target LSASS to dump credentials, but modern systems employ LSA Protection to block unauthorized access. This detects attempts to bypass this protection.",
+        "severity": "High",
+        "enabled": true,
+        "query": "let LSA_Protection_Bypass_via_Load_Driver =\nSecurityEvent\n| where EventID == 4697\n| where ServiceName has_any (\"mimidrv\",\"RTCore32\",\"RTCore64\")\n| where ServiceStartType == \"2\"\n| where ServiceType == \"0x1\";\nlet LSA_Protection_Bypass_via_registry_key =\nSecurityEvent\n| where EventID == 4657\n| where ObjectName has \"\\\\REGISTRY\\\\MACHINE\\\\SYSTEM\\\\ControlSet001\\\\Control\\\\Lsa\"\n| where tolower(ObjectValueName) == \"runasppl\"\n| where NewValue == \"0\";\nlet Parent_Process = dynamic([\"cmd.exe\",\"powershell.exe\"]);\nlet cmd = dynamic([\"\\\\HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\Lsa\"]);\nlet cmd_all = dynamic([\"/v RunAsPPL\",\"/t REG_DWORD\", \"/d 0\"]);\nlet LSA_Protection_Bypass_via_commandline = _Im_ProcessCreate(targetprocess_has_any=\"reg.exe\",parentprocess_has_any=Parent_Process, commandline_has_all=cmd_all, commandline_has_any=cmd);\nunion isfuzzy=true\nLSA_Protection_Bypass_via_Load_Driver, LSA_Protection_Bypass_via_registry_key, LSA_Protection_Bypass_via_commandline\n| extend\n    Computer = tostring(coalesce(\n        column_ifexists(\"Computer\", \"\"),\n        column_ifexists(\"DvcHostname\", \"\")\n    )),\n    Account = tostring(coalesce(\n        column_ifexists(\"SubjectUserName\", \"\"),\n        column_ifexists(\"ActorUsername\", \"\"),\n        column_ifexists(\"Account\", \"\")\n    )),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLineMapped = tostring(column_ifexists(\"CommandLine\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1003"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLineMapped"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "0d541bf3-53a4-43e3-a8df-c07cba0889e0"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs",
+        "description": "ScriptBlock Smuggling is a technique used by attackers to bypass detection mechanisms, such as logging and security products, in PowerShell. The technique allows attackers to hide malicious PowerShell commands or scripts from the PowerShell ScriptBlock logging feature, which is designed to record and monitor every script that is executed. The main goal of ScriptBlock Smuggling is to make malicious activities invisible in the logs, making it difficult for defenders and incident responders to detect and analyze the attack.",
+        "severity": "High",
+        "enabled": true,
+        "query": "//ScriptBlock Smuggling is a technique used by attackers to bypass detection mechanisms, such as logging and security products, in PowerShell. The technique allows attackers to hide malicious PowerShell commands or scripts from the PowerShell ScriptBlock logging feature, which is designed to record and monitor every script that is executed.\nDeviceProcessEvents\n| where FileName == 'powershell.exe'\n| where ProcessCommandLine matches regex @\"(?i)ast\\s=\\s\\[ScriptBlock\\]::Create\"\n| where ProcessCommandLine matches regex @\"(?i)ast\\s=\\s\\[System\\.Management\\.Automation\\.Language\\.ScriptBlockAst\\]\"\n| where ProcessCommandLine matches regex @\"(?i)\\$executedast\\.endblock\\.copy\"\n| extend\n    Computer = tostring(column_ifexists(\"DeviceName\", \"\")),\n    Account = tostring(column_ifexists(\"InitiatingProcessAccountName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"ProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"ProcessCommandLine\", \"\"))\n| where isnotempty(Computer)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion",
+          "Execution"
+        ],
+        "techniques": [
+          "T1027",
+          "T1059"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}
