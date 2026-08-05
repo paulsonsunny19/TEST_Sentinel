@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Alerts for Compliance Failures.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "859f0c5f-4cf8-42e7-84ca-0a5e0da5355e"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Alerts for Compliance Failures",
+        "description": "rule to create tickets for compliance failures",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "let Recommendations = \n    SecurityRecommendation\n    | summarize arg_max(TimeGenerated, *) by RecommendationName;\nSecurityRegulatoryCompliance\n| join kind=fullouter Recommendations on RecommendationName\n| where ComplianceStandard in (\"NIST-SP-800-53-R5\", \"CIS-Azure-Foundations-v2.0.0\")\n| where State == \"Failed\"\n| where RecommendationState == \"Unhealthy\"\n| summarize arg_max(TimeGenerated, *) by RecommendationName\n| extend Affected_Resource = parse_json(tostring(Properties1.resourceDetails)).resourceName\n| project\n    RecommendationName,\n    Description,\n    RecommendationState,\n    State,\n    RecommendationSeverity,\n    RecommendationLink,\n    Affected_Resource",
+        "queryFrequency": "P7D",
+        "queryPeriod": "P7D",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Discovery"
+        ],
+        "techniques": [
+          "T1082"
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": false,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "alertDetailsOverride": {
+          "alertDisplayNameFormat": "Compliance Failure {{RecommendationName}} ",
+          "alertDescriptionFormat": "Severity:: {{RecommendationSeverity}} affecting resource:: {{Affected_Resource}}  \nInvestigate and remediate using {{RecommendationLink}} for further information.",
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -246,10 +246,178 @@
     "displayName": "Office Apps Launching Wscipt"
   },
   {
+    "source": "PSOC -  Detects the use of getsystem Meterpreter.yaml",
+    "output": "AnalyticsRules/PSOC -  Detects the use of getsystem Meterpreter.json",
+    "ruleId": "5e476b0e-adfb-481f-ba98-95344d613f17",
+    "displayName": "PSOC - Detects the use of getsystem Meterpreter"
+  },
+  {
+    "source": "PSOC - 7Zip Compressing Dump Files.yaml",
+    "output": "AnalyticsRules/PSOC - 7Zip Compressing Dump Files.json",
+    "ruleId": "0678c31e-3733-4d90-8d6a-176380bd936a",
+    "displayName": "PSOC - 7Zip Compressing Dump Files"
+  },
+  {
+    "source": "PSOC - AMSI Bypass Pattern commands.yaml",
+    "output": "AnalyticsRules/PSOC - AMSI Bypass Pattern commands.json",
+    "ruleId": "2d95336d-2906-4015-b6fc-99c6c65c0af7",
+    "displayName": "PSOC - AMSI Bypass Pattern commands"
+  },
+  {
+    "source": "PSOC - Alerts for Compliance Failures.yaml",
+    "output": "AnalyticsRules/PSOC - Alerts for Compliance Failures.json",
+    "ruleId": "859f0c5f-4cf8-42e7-84ca-0a5e0da5355e",
+    "displayName": "PSOC - Alerts for Compliance Failures"
+  },
+  {
+    "source": "PSOC - Allowed RDP from the internet.yaml",
+    "output": "AnalyticsRules/PSOC - Allowed RDP from the internet.json",
+    "ruleId": "0ddf3c79-05da-4479-899c-26a9ab82af7a",
+    "displayName": "PSOC - Allowed RDP from the internet"
+  },
+  {
+    "source": "PSOC - Amsi.DLL Loaded Via LOLBIN Process.yaml",
+    "output": "AnalyticsRules/PSOC - Amsi.DLL Loaded Via LOLBIN Process.json",
+    "ruleId": "f369120b-d424-4ad4-82eb-cd32fc63060e",
+    "displayName": "PSOC - Amsi.DLL Loaded Via LOLBIN Process"
+  },
+  {
+    "source": "PSOC - Apache Commons Text Remote Code Execution Vulnerability (CVE-2022-42889).yaml",
+    "output": "AnalyticsRules/PSOC - Apache Commons Text Remote Code Execution Vulnerability (CVE-2022-42889).json",
+    "ruleId": "bc92a625-7e05-4a53-b94e-e58e04faa34a",
+    "displayName": "PSOC - Apache Commons Text Remote Code Execution Vulnerability (CVE-2022-42889)"
+  },
+  {
+    "source": "PSOC - Application Removed Via Wmic.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Application Removed Via Wmic.EXE.json",
+    "ruleId": "dff1eda2-05cc-483e-a897-51b19a4350c6",
+    "displayName": "PSOC - Application Removed Via Wmic.EXE"
+  },
+  {
+    "source": "PSOC - AteraAgent malicious installations.yaml",
+    "output": "AnalyticsRules/PSOC - AteraAgent malicious installations.json",
+    "ruleId": "74061d0c-8037-47fa-96fe-4e8a1f5eb55d",
+    "displayName": "PSOC - AteraAgent malicious installations"
+  },
+  {
+    "source": "PSOC - Attempts of malicious JS execution through node.yaml",
+    "output": "AnalyticsRules/PSOC - Attempts of malicious JS execution through node.json",
+    "ruleId": "48bd96a8-b5ab-4751-a22d-dfda8158a279",
+    "displayName": "PSOC - Attempts of malicious JS execution through node"
+  },
+  {
+    "source": "PSOC - Attempts to install BitLocker using Powershell.yaml",
+    "output": "AnalyticsRules/PSOC - Attempts to install BitLocker using Powershell.json",
+    "ruleId": "e75bb1f4-ff99-4451-aaa2-eb41a1259291",
+    "displayName": "PSOC - Attempts to install BitLocker using Powershell"
+  },
+  {
+    "source": "PSOC - AzCopy Selective File type Exfiltration.yaml",
+    "output": "AnalyticsRules/PSOC - AzCopy Selective File type Exfiltration.json",
+    "ruleId": "6a427775-d111-47f3-a416-63264b8d3dd1",
+    "displayName": "PSOC- AzCopy Selective File type Exfiltration"
+  },
+  {
+    "source": "PSOC - Azure AD Device Code Authentication.yaml",
+    "output": "AnalyticsRules/PSOC - Azure AD Device Code Authentication.json",
+    "ruleId": "9b3abf42-9015-4cfd-ba5f-2f96296bc5a2",
+    "displayName": "PSOC - Azure AD Device Code Authentication"
+  },
+  {
+    "source": "PSOC - Blackcat Ransomware activity detection via registry key modification.yaml",
+    "output": "AnalyticsRules/PSOC - Blackcat Ransomware activity detection via registry key modification.json",
+    "ruleId": "ab1f8374-8b8f-41c8-b73b-efafe103afa0",
+    "displayName": "PSOC - Blackcat Ransomware activity detection via registry key modification"
+  },
+  {
+    "source": "PSOC - Brute Force Attempt on Forti SSL-VPN.yaml",
+    "output": "AnalyticsRules/PSOC - Brute Force Attempt on Forti SSL-VPN.json",
+    "ruleId": "4b867d41-5a25-4754-b263-1f9156bf6a2a",
+    "displayName": "PSOC - Brute Force Attempt on Forti SSL-VPN"
+  },
+  {
+    "source": "PSOC - CMSTP UAC Bypass via COM Object Access.yaml",
+    "output": "AnalyticsRules/PSOC - CMSTP UAC Bypass via COM Object Access.json",
+    "ruleId": "79b7f6ad-e33f-4e05-8251-8954fca6f9ee",
+    "displayName": "PSOC - CMSTP UAC Bypass via COM Object Access"
+  },
+  {
+    "source": "PSOC - Cloudflared Tunnel Execution.yaml",
+    "output": "AnalyticsRules/PSOC - Cloudflared Tunnel Execution.json",
+    "ruleId": "3b359894-d433-4346-9ae9-2bab1f13687a",
+    "displayName": "PSOC - Cloudflared Tunnel Execution"
+  },
+  {
+    "source": "PSOC - DNS Global Query Block List Modified or Disabled.yaml",
+    "output": "AnalyticsRules/PSOC - DNS Global Query Block List Modified or Disabled.json",
+    "ruleId": "657db2fe-ec46-490b-9786-79c44c2042eb",
+    "displayName": "PSOC - DNS Global Query Block List Modified or Disabled via Registry"
+  },
+  {
+    "source": "PSOC - Detect WDigest Usage.yaml",
+    "output": "AnalyticsRules/PSOC - Detect WDigest Usage.json",
+    "ruleId": "7515ce3c-0965-4768-9c83-4dfe304cb8ee",
+    "displayName": "PSOC - Detect WDigest Usage"
+  },
+  {
+    "source": "PSOC - Detect usage of Evil Winrm.yaml",
+    "output": "AnalyticsRules/PSOC - Detect usage of Evil Winrm.json",
+    "ruleId": "b9d30f12-71c0-4d88-8a08-98e5e62b193c",
+    "displayName": "PSOC - Detect usage of Evil Winrm"
+  },
+  {
+    "source": "PSOC - Detected EventLog Query Requests By Builtin Utilities.yaml",
+    "output": "AnalyticsRules/PSOC - Detected EventLog Query Requests By Builtin Utilities.json",
+    "ruleId": "e28c53cb-2744-4f22-a956-e268173b6826",
+    "displayName": "PSOC - Detected EventLog Query Requests By Builtin Utilities"
+  },
+  {
+    "source": "PSOC - Detected File Recovery From Backup Via Wbadmin.EXE.yaml",
+    "output": "AnalyticsRules/PSOC - Detected File Recovery From Backup Via Wbadmin.EXE.json",
+    "ruleId": "b9ddc0b5-3d0c-40d9-8ac0-6b09acdd0a3f",
+    "displayName": "PSOC - Detected File Recovery From Backup Via Wbadmin.EXE"
+  },
+  {
+    "source": "PSOC - Detecting CrashFix malicious command.yaml",
+    "output": "AnalyticsRules/PSOC - Detecting CrashFix malicious command.json",
+    "ruleId": "0fe20175-4735-4f75-950f-2d9204732eaf",
+    "displayName": "PSOC - Detecting CrashFix malicious command"
+  },
+  {
+    "source": "PSOC - Detects AdFind tool execution used during attacks.yaml",
+    "output": "AnalyticsRules/PSOC - Detects AdFind tool execution used during attacks.json",
+    "ruleId": "bfd3fdb6-8bb9-424b-87fd-5e3a4e609213",
+    "displayName": "PSOC - Detects AdFind tool execution used during attacks"
+  },
+  {
+    "source": "PSOC - Detects Certify a tool for Active Directory certificate abuse.yaml",
+    "output": "AnalyticsRules/PSOC - Detects Certify a tool for Active Directory certificate abuse.json",
+    "ruleId": "851691e3-ee67-4958-a188-6b36ce749605",
+    "displayName": "PSOC - Detects Certify a tool for Active Directory certificate abuse"
+  },
+  {
+    "source": "PSOC - Detects Commandlet names and arguments from SessionGopher.yaml",
+    "output": "AnalyticsRules/PSOC - Detects Commandlet names and arguments from SessionGopher.json",
+    "ruleId": "64669eec-a9c4-4a12-b58a-4e4e0b396384",
+    "displayName": "PSOC - Detects Commandlet names and arguments from SessionGopher"
+  },
+  {
+    "source": "PSOC - Detects DarkGate malware activity.yaml",
+    "output": "AnalyticsRules/PSOC - Detects DarkGate malware activity.json",
+    "ruleId": "ad54c3da-84c3-4b9f-9147-5535b829a169",
+    "displayName": "PSOC - Detects DarkGate malware activity"
+  },
+  {
     "source": "PSOC - Detects Powershell constrained language (CLM) bypass.yaml",
     "output": "AnalyticsRules/PSOC - Detects Powershell constrained language (CLM) bypass.json",
     "ruleId": "d50be92d-0fe3-4766-9db0-6f8273b18382",
     "displayName": "PSOC - Detects Powershell constrained language (CLM) bypass"
+  },
+  {
+    "source": "PSOC - Detects a Bitsadmin job with suspicious command execution.yaml",
+    "output": "AnalyticsRules/PSOC - Detects a Bitsadmin job with suspicious command execution.json",
+    "ruleId": "eccf4362-d175-4292-9d45-f9481182e614",
+    "displayName": "PSOC - Detects a Bitsadmin job with suspicious command execution"
   },
   {
     "source": "PSOC - Detects execution of Impacket's smbexec.py.yaml",

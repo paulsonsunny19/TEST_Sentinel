@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detect WDigest Usage.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "7515ce3c-0965-4768-9c83-4dfe304cb8ee"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detect WDigest Usage",
+        "description": "detects the use of wdigest\nwdigest is insecure and should not be used",
+        "severity": "High",
+        "enabled": true,
+        "query": "//wdigest is insecure and should not be used\nlet Suspicious_WDigest_Authentication = \nSecurityEvent\n| where EventID in (4624, 4776)\n| extend AuthPackage = case(\n     EventID == 4624, AuthenticationPackageName,\n     EventID == 4776, PackageName,\n    \"\"\n)\n| where AuthPackage ==\"WDigest\";\nlet Suspicious_WDigest_registry_key_changes =\n_Im_ProcessCreate\n| where CommandLine has_any (dynamic([\"reg add\", \"REG ADD\", \"REG.EXE ADD\", \"reg.exe add\"]))\n| where CommandLine contains @\"\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest\"\n| where CommandLine has \"UseLogonCredential\" \n| where CommandLine has \"/t Reg_DWORD\"\n| where CommandLine has \"/d 1\";\nunion isfuzzy=true\nSuspicious_WDigest_Authentication, Suspicious_WDigest_registry_key_changes\n| extend\n    Computer = tostring(coalesce(\n        column_ifexists(\"Computer\", \"\"),\n        column_ifexists(\"DvcHostname\", \"\")\n    )),\n    Account = tostring(coalesce(\n        column_ifexists(\"TargetUserName\", \"\"),\n        column_ifexists(\"ActorUsername\", \"\")\n    )),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\"))",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1003"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

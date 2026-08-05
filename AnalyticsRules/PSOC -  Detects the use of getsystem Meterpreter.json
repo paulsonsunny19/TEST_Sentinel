@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC -  Detects the use of getsystem Meterpreter.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "5e476b0e-adfb-481f-ba98-95344d613f17"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detects the use of getsystem Meterpreter",
+        "description": "Detects the use of the getsystem Meterpreter command by identifying suspicious\nservice-based process execution patterns involving cmd.exe and pipe-based command execution.\n",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Normalised, schema-safe detection for Meterpreter getsystem behaviour\nSecurityEvent\n| where EventID == 4688\n| extend\n    Account = coalesce(\n        column_ifexists(\"SubjectUserName\", \"\"),\n        column_ifexists(\"Account\", \"\")\n    ),\n    AccountDomain = column_ifexists(\"SubjectDomainName\", \"\"),\n    Computer = column_ifexists(\"Computer\", \"\"),\n    NewProcessName = column_ifexists(\"NewProcessName\", \"\"),\n    NewProcessId = tostring(column_ifexists(\"NewProcessId\", \"\")),\n    ParentProcessName = column_ifexists(\"ParentProcessName\", \"\"),\n    CommandLine = column_ifexists(\"CommandLine\", \"\")\n| where CommandLine has_all (\"/c\", \"echo\", \"pipe\")\n| where CommandLine has_any (\"cmd\", \"%COMSPEC%\")\n| where ParentProcessName =~ \"services.exe\"\n| where isnotempty(CommandLine)\n| extend AccountFull = iff(\n    isempty(AccountDomain),\n    Account,\n    strcat(AccountDomain, \"\\\\\", Account)\n)\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "PrivilegeEscalation"
+        ],
+        "techniques": [
+          "T1134.001",
+          "T1134.002"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "NewProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "PSOC - Detected EventLog Query Requests By Builtin Utilities.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "e28c53cb-2744-4f22-a956-e268173b6826"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "PSOC - Detected EventLog Query Requests By Builtin Utilities",
+        "description": "Detects various methods of querying the event log which could be legitimate or the recon by an attacker.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// This detects suspicious queries of the event log using various methods - servers only\nlet server_device_ids =\n  DeviceInfo \n  | where TimeGenerated > ago(7d) \n  | where DeviceType == 'Server'\n  | distinct DeviceId;\nlet cmd_prefilter = dynamic([\"Select\", \"Win32_NTLogEvent\",\"qe\", \"query-events\",\"ntevent\",\"Get-WinEvent\", \"get-eventlog\"]);\n_Im_ProcessCreate(commandline_has_any=cmd_prefilter)\n| where DvcId in (server_device_ids)\n| where \n       (                                                               CommandLine has_all (dynamic([\"Select\", \"Win32_NTLogEvent\"]))    )\n    or (    TargetProcessName has_any (dynamic([\"wevtutil.exe\"])) and CommandLine has_any (dynamic([\"qe\", \"query-events\"]))           )\n    or (    TargetProcessName has_any (dynamic([\"wmic.exe\"]))     and CommandLine has_any (dynamic([\"ntevent\", \"query-events\"]))      )\n    or (                                                               CommandLine has_any (dynamic([\"Get-WinEvent\", \"get-eventlog\"])) )\n| extend\n    Account = tostring(column_ifexists(\"ActorUsername\", \"\")),\n    AccountDomain = tostring(column_ifexists(\"ActorUserDomain\", \"\")),\n    Computer = tostring(column_ifexists(\"DvcHostname\", \"\")),\n    ProcessName = tostring(column_ifexists(\"TargetProcessName\", \"\")),\n    ProcessId = tostring(column_ifexists(\"TargetProcessId\", \"\")),\n    CommandLine = tostring(column_ifexists(\"CommandLine\", \"\"))\n| where isnotempty(ProcessName)",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1552"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "Account"
+              },
+              {
+                "identifier": "NTDomain",
+                "columnName": "AccountDomain"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "Computer"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "ProcessId",
+                "columnName": "ProcessId"
+              },
+              {
+                "identifier": "CommandLine",
+                "columnName": "CommandLine"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}
