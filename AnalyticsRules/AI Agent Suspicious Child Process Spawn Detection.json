@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "AI Agent Suspicious Child Process Spawn Detection.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "87ed7d19-f197-415d-a864-6c715f4b8089"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "AI Agent Suspicious Child Process Spawn Detection",
+        "description": "Detects suspicious child processes spawned by AI agent runtimes\n(OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI).\nFocuses on administrative tooling, encoded command execution,\npersistence creation, defense evasion, and credential-related activity.\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceProcessEvents\n| where Timestamp > ago(1h)\n| where InitiatingProcessCommandLine has_any (\"openclaw\",\"moltbot\",\"clawdbot\",\"autogpt\",\"babyagi\")\n| where FileName in (\n    \"powershell.exe\",\"cmd.exe\",\"wmic.exe\",\n    \"rundll32.exe\",\"mshta.exe\",\"reg.exe\",\n    \"net.exe\",\"net1.exe\",\"curl.exe\",\"wget.exe\",\n    \"schtasks.exe\",\"sc.exe\"\n)\n  or ProcessCommandLine has_any (\n    \"-enc\",\"-encodedcommand\",\n    \"Invoke-WebRequest\",\n    \"DownloadString\",\n    \"Add-MpPreference\",\n    \"reg add\",\n    \"vssadmin\",\n    \"whoami /priv\"\n)\n| summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()\n    by DeviceName, InitiatingProcessAccountName, FileName, ProcessCommandLine\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution",
+          "Persistence",
+          "PrivilegeEscalation",
+          "DefenseEvasion",
+          "CredentialAccess"
+        ],
+        "techniques": [
+          "T1059",
+          "T1547",
+          "T1068",
+          "T1562",
+          "T1003"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "InitiatingProcessAccountName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

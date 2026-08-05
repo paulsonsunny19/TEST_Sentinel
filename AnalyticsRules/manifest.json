@@ -1,5 +1,29 @@
 [
   {
+    "source": "AI Agent Persistence Creation Detection.yaml",
+    "output": "AnalyticsRules/AI Agent Persistence Creation Detection.json",
+    "ruleId": "deb9eba3-5eca-4592-95ea-bdfe91498920",
+    "displayName": "AI Agent Persistence Creation Detection"
+  },
+  {
+    "source": "AI Agent Privileged Identity Usage Detection.yaml",
+    "output": "AnalyticsRules/AI Agent Privileged Identity Usage Detection.json",
+    "ruleId": "1d4394c9-1e30-45e1-966a-dc0dc1066d40",
+    "displayName": "AI Agent Privileged Identity Usage Detection"
+  },
+  {
+    "source": "AI Agent Skill Installation Detection.yaml",
+    "output": "AnalyticsRules/AI Agent Skill Installation Detection.json",
+    "ruleId": "b14d08f5-99e3-48ca-8241-fbe806a3bc53",
+    "displayName": "AI Agent Skill Installation Detection"
+  },
+  {
+    "source": "AI Agent Suspicious Child Process Spawn Detection.yaml",
+    "output": "AnalyticsRules/AI Agent Suspicious Child Process Spawn Detection.json",
+    "ruleId": "87ed7d19-f197-415d-a864-6c715f4b8089",
+    "displayName": "AI Agent Suspicious Child Process Spawn Detection"
+  },
+  {
     "source": "AccountCreation.yaml",
     "output": "AnalyticsRules/AccountCreation.json",
     "ruleId": "450f4e56-5bba-4070-b9d9-9204ba9d777d",
@@ -12,16 +36,40 @@
     "displayName": "Bitsadmin Activity"
   },
   {
+    "source": "CommandInURL.yaml",
+    "output": "AnalyticsRules/CommandInURL.json",
+    "ruleId": "32c08696-2e37-4730-86f8-97d9c8b184c9",
+    "displayName": "Detect URLs containing known malicious keywords or commands (ASIM Web Session)"
+  },
+  {
     "source": "DataDeletionOnMulipleDrivesUsingCipherExe.yaml",
     "output": "AnalyticsRules/DataDeletionOnMulipleDrivesUsingCipherExe.json",
     "ruleId": "03caa992-477f-4b19-8e2a-8cd58f8f9652",
     "displayName": "Deletion of data on multiple drives using cipher exe"
   },
   {
+    "source": "DataExfiltrationTimeSeriesAnomaly.yaml",
+    "output": "AnalyticsRules/DataExfiltrationTimeSeriesAnomaly.json",
+    "ruleId": "5965d3e7-8ed0-477c-9b42-e75d9237fab0",
+    "displayName": "Detect unauthorized data transfers using timeseries anomaly (ASIM Web Session)"
+  },
+  {
+    "source": "DiscordCDNRiskyFileDownload.yaml",
+    "output": "AnalyticsRules/DiscordCDNRiskyFileDownload.json",
+    "ruleId": "b7fe8f27-7010-404b-aec5-6e5245cea580",
+    "displayName": "The download of potentially risky files from the Discord Content Delivery Network (CDN) (ASIM Web Session)"
+  },
+  {
     "source": "DoppelpaymerStopService.yaml",
     "output": "AnalyticsRules/DoppelpaymerStopService.json",
     "ruleId": "5bdc1504-880c-4b30-a39c-7c746535928d",
     "displayName": "Doppelpaymer Stop Services"
+  },
+  {
+    "source": "KnownMaliciousUserAgents.yaml",
+    "output": "AnalyticsRules/KnownMaliciousUserAgents.json",
+    "ruleId": "6a4dbcf8-f5e2-4b33-b34f-2db6487613f0",
+    "displayName": "Detect known risky user agents (ASIM Web Session)"
   },
   {
     "source": "LaZagneCredTheft.yaml",
@@ -36,10 +84,22 @@
     "displayName": "Local Admin Group Changes"
   },
   {
+    "source": "LocalFileInclusion-LFI.yaml",
+    "output": "AnalyticsRules/LocalFileInclusion-LFI.json",
+    "ruleId": "7bb55d05-ef39-4a40-8079-0bc3c05e7881",
+    "displayName": "Detect Local File Inclusion(LFI) in web requests (ASIM Web Session)"
+  },
+  {
     "source": "LogDeletionUsingWevtutil.yaml",
     "output": "AnalyticsRules/LogDeletionUsingWevtutil.json",
     "ruleId": "515d0bba-b297-4f83-8280-20ff7f27ecb1",
     "displayName": "Clearing of forensic evidence from event logs using wevtutil"
+  },
+  {
+    "source": "MDE_Servers_Monitoring.yaml",
+    "output": "AnalyticsRules/MDE_Servers_Monitoring.json",
+    "ruleId": "20c7fd22-cad2-4a34-9c3a-c09b127d221b",
+    "displayName": "MDE Servers Monitoring"
   },
   {
     "source": "MaliciousWAFSessions.yaml",
@@ -238,6 +298,24 @@
     "output": "AnalyticsRules/MultiProcessKillWithTaskKill.json",
     "ruleId": "4dd31bd5-11a3-4b9c-a7c5-4927ab4f2a77",
     "displayName": "Stopping multiple processes using taskkill"
+  },
+  {
+    "source": "MultipleClientErrorsWithinShortTime.yaml",
+    "output": "AnalyticsRules/MultipleClientErrorsWithinShortTime.json",
+    "ruleId": "faa40333-1e8b-40cc-a003-51ae41fa886f",
+    "displayName": "Detect instances of multiple client errors occurring within a brief period of time (ASIM Web Session)"
+  },
+  {
+    "source": "MultipleServerErrorsWithinShortTime.yaml",
+    "output": "AnalyticsRules/MultipleServerErrorsWithinShortTime.json",
+    "ruleId": "a59ba76c-0205-4966-948e-3d5640140688",
+    "displayName": "Detect instances of multiple server errors occurring within a brief period of time (ASIM Web Session)"
+  },
+  {
+    "source": "MultipleUAsFromSingleIP.yaml",
+    "output": "AnalyticsRules/MultipleUAsFromSingleIP.json",
+    "ruleId": "813ccf3b-0321-4622-b0bc-63518fd14454",
+    "displayName": "Identify instances where a single source is observed using multiple user agents (ASIM Web Session)"
   },
   {
     "source": "OfficeAppsLaunchingWscript.yaml",
@@ -1014,16 +1092,40 @@
     "displayName": "PSOC - Suspicious Entra ID Token Request for Device Registration Service"
   },
   {
+    "source": "PossibleAiTMPhishingAttemptAgainstAAD.yaml",
+    "output": "AnalyticsRules/PossibleAiTMPhishingAttemptAgainstAAD.json",
+    "ruleId": "16daa67c-b137-48dc-8eb7-76598a44791a",
+    "displayName": "Possible AiTM Phishing Attempt Against Microsoft Entra ID"
+  },
+  {
+    "source": "PossibleMaliciousDoubleExtension.yaml",
+    "output": "AnalyticsRules/PossibleMaliciousDoubleExtension.json",
+    "ruleId": "6a71687f-00cf-44d3-93fc-8cbacc7b5615",
+    "displayName": "Detect potential presence of a malicious file with a double extension (ASIM Web Session)"
+  },
+  {
     "source": "PotentialCobaltStrikeRansomwareActivity.yaml",
     "output": "AnalyticsRules/PotentialCobaltStrikeRansomwareActivity.json",
     "ruleId": "4bd9ce9d-8586-4beb-8fdb-bd018cacbe7d",
     "displayName": "Potential Ransomware activity related to Cobalt Strike"
   },
   {
+    "source": "PrivateIPInURL.yaml",
+    "output": "AnalyticsRules/PrivateIPInURL.json",
+    "ruleId": "e3a7722a-e099-45a9-9afb-6618e8f05405",
+    "displayName": "Detect presence of private IP addresses in URLs (ASIM Web Session)"
+  },
+  {
     "source": "QakbotDiscoveryActivities.yaml",
     "output": "AnalyticsRules/QakbotDiscoveryActivities.json",
     "ruleId": "ba9db6b2-3d05-42ae-8aee-3a15bbe29f27",
     "displayName": "Qakbot Discovery Activies"
+  },
+  {
+    "source": "Quota Exceeded.yaml",
+    "output": "AnalyticsRules/Quota Exceeded.json",
+    "ruleId": "d8a7c5b6-7434-4dd6-971f-2af54c4775e0",
+    "displayName": "Quota exceeded"
   },
   {
     "source": "RDP Activity Originating from Unmanaged Device.yaml",
@@ -1050,6 +1152,18 @@
     "displayName": "Remote File Creation with PsExec"
   },
   {
+    "source": "RequestToPotentiallyHarmfulFileTypes.yaml",
+    "output": "AnalyticsRules/RequestToPotentiallyHarmfulFileTypes.json",
+    "ruleId": "c6608467-3678-45fe-b038-b590ce6d00fb",
+    "displayName": "Detect web requests to potentially harmful files (ASIM Web Session)"
+  },
+  {
+    "source": "Rule Failures.yaml",
+    "output": "AnalyticsRules/Rule Failures.json",
+    "ruleId": "721c4ca9-8a69-4e39-a35a-24afbad8d646",
+    "displayName": "Rule Failures"
+  },
+  {
     "source": "ServiceAccountsPerformingRemotePS.yaml",
     "output": "AnalyticsRules/ServiceAccountsPerformingRemotePS.json",
     "ruleId": "d29cc957-0ddb-4d00-8d6f-ad1bb345ff9a",
@@ -1072,5 +1186,65 @@
     "output": "AnalyticsRules/Suspicious RDP Lateral Movement Activity.json",
     "ruleId": "b76406b0-0344-4d1b-930b-9d1b58faad0d",
     "displayName": "Suspicious RDP Lateral Movement Activity"
+  },
+  {
+    "source": "Tables_Stopped_Logging_HIGH.yaml",
+    "output": "AnalyticsRules/Tables_Stopped_Logging_HIGH.json",
+    "ruleId": "b305f1ea-1a25-40e4-b602-2d79acf6ebd8",
+    "displayName": "Tables stopped logging - HIGH"
+  },
+  {
+    "source": "Tables_Stopped_Logging_INFREQUENT.yaml",
+    "output": "AnalyticsRules/Tables_Stopped_Logging_INFREQUENT.json",
+    "ruleId": "3fa6c77c-12d9-48db-bccd-9a4e53daf90a",
+    "displayName": "Tables stopped logging - INFREQUENT"
+  },
+  {
+    "source": "Tables_Stopped_Logging_LOW.yaml",
+    "output": "AnalyticsRules/Tables_Stopped_Logging_LOW.json",
+    "ruleId": "18702286-6218-4da8-901d-b9469f42f395",
+    "displayName": "Tables stopped logging - LOW"
+  },
+  {
+    "source": "Tables_Stopped_Logging_MEDIUM.yaml",
+    "output": "AnalyticsRules/Tables_Stopped_Logging_MEDIUM.json",
+    "ruleId": "8c4948e6-21e3-4eb7-a473-7c1ef5982b57",
+    "displayName": "Tables stopped logging - MEDIUM"
+  },
+  {
+    "source": "ThreatInfoFoundInWebRequests.yaml",
+    "output": "AnalyticsRules/ThreatInfoFoundInWebRequests.json",
+    "ruleId": "7d2ed1c7-da26-45fd-b4ea-b6f2bbeccea7",
+    "displayName": "Detect threat information in web requests (ASIM Web Session)"
+  },
+  {
+    "source": "Threat_Essentials_Mail_redirect_via_ExO_transport_rule.yaml",
+    "output": "AnalyticsRules/Threat_Essentials_Mail_redirect_via_ExO_transport_rule.json",
+    "ruleId": "d7c575b2-84f5-48cb-92c5-70d7e8246284",
+    "displayName": "Threat Essentials - Mail redirect via ExO transport rule"
+  },
+  {
+    "source": "Threat_Essentials_MultipleAdmin_membership_removals_from_NewAdmin.yaml",
+    "output": "AnalyticsRules/Threat_Essentials_MultipleAdmin_membership_removals_from_NewAdmin.json",
+    "ruleId": "199978c5-cd6d-4194-b505-8ef5800739df",
+    "displayName": "Threat Essentials - Multiple admin membership removals from newly created admin."
+  },
+  {
+    "source": "Threat_Essentials_TimeSeriesAnomaly-MultiVendor_DataExfiltration.yaml",
+    "output": "AnalyticsRules/Threat_Essentials_TimeSeriesAnomaly-MultiVendor_DataExfiltration.json",
+    "ruleId": "b49a1093-cbf6-4973-89ac-2eef98f533c6",
+    "displayName": "Threat Essentials - Time series anomaly for data size transferred to public internet"
+  },
+  {
+    "source": "Threat_Essentials_TimeSeriesAnomaly_Mass_Cloud_Resource_Deletions.yaml",
+    "output": "AnalyticsRules/Threat_Essentials_TimeSeriesAnomaly_Mass_Cloud_Resource_Deletions.json",
+    "ruleId": "fa2658fe-3714-4c55-bb12-2b7275c628e8",
+    "displayName": "Threat Essentials - Mass Cloud resource deletions Time Series Anomaly"
+  },
+  {
+    "source": "Unauthorized AI Agent Runtime Detection.yaml",
+    "output": "AnalyticsRules/Unauthorized AI Agent Runtime Detection.json",
+    "ruleId": "8e274b6e-29f0-44f6-becd-76b82991eb5c",
+    "displayName": "Unauthorized Self-Hosted AI Runtime Detected"
   }
 ]

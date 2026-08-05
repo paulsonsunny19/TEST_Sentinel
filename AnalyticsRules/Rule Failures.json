@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Rule Failures.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "721c4ca9-8a69-4e39-a35a-24afbad8d646"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Rule Failures",
+        "description": "Creates an alert when a rule fails to execute multiple times.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// // Measure the maximum latency over 1-hour periods for the last 90 days:\n// let _step = 1d;\n// let _from = bin(now()-90d,_step);\n// let _to   = bin(now(),_step);\n// _SentinelHealth()\n// | make-series maxDeltaIngestionTime = max(datetime_diff('minute',ingestion_time(),TimeGenerated)) on TimeGenerated from _from to _to step _step by Type\n// | render timechart\n// // The highest most common value is < 35 minutes, with few peaks over 70 minutes and 1 isolated case of 4 hours\nlet ingestion_delay = 40min;\nlet observation_hours = 16;\nlet rule_look_back = 1h * observation_hours;\nlet threshold = max_of(1,toint(0.75 * observation_hours));\n_SentinelHealth()\n| where TimeGenerated >= ago(ingestion_delay + rule_look_back)\n| where ingestion_time() > ago(rule_look_back)\n| where Status !in (\"Success\", \"PartialSuccess\")\n| where SentinelResourceType != \"Data connector\"\n| extend SubscriptionID = tolower(extract(@'/subscriptions/([^/]+)/', 1, SentinelResourceId))\n| extend WorkspaceName = tolower(extract(@'/workspaces/([^/]+)/', 1, SentinelResourceId))\n| extend RuleId = tostring(ExtendedProperties.RuleId)\n| extend TriggerType = tostring(ExtendedProperties.TriggerType)\n| extend Issues = todynamic(tostring(ExtendedProperties.Issues))\n| extend Issues = iff(array_length(Issues) == 0, todynamic(\"null\"), Issues)\n| mv-expand Issues\n| extend IssuesCodes = array_strcat(Issues.Code, ',')\n| extend IssuesCodes = iff(IssuesCodes!=\"\", IssuesCodes, Reason)\n| extend Tenant = TenantId\n| summarize occurrences = count() by\n    RuleId,\n    IssuesCodes,\n    Tenant,\n    SubscriptionID,\n    WorkspaceName,\n    TriggerType,\n    SentinelResourceName,\n    Status\n| project WorkspaceName,SentinelResourceName,Status,IssuesCodes,occurrences,Tenant,SubscriptionID,TriggerType,RuleId\n| order by occurrences desc\n// use different thresholds to tune out less severe instances.\n| where occurrences > case(\n  IssuesCodes == \"TemporaryIssuesDelay\",    threshold,\n  IssuesCodes == \"SemanticErrorInQuery\",    threshold,\n  IssuesCodes == \"QueryGeneralError\",       threshold,\n  IssuesCodes == \"QueryTimeout\",            threshold,\n  IssuesCodes == \"GeneralError\",            threshold,\n  IssuesCodes == \"ReferencedTableNotFound\", 0,\n  IssuesCodes == \"The analytics rule is disabled and was not executed.\", 0,\n  0 // catch-all - will probably have to further finetune this.\n)",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT17H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT1H",
+            "matchingMethod": "AnyAlert",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "customDetails": {
+          "RuleName": "SentinelResourceName",
+          "TriggerType": "TriggerType",
+          "Status": "Status",
+          "Issues": "IssuesCodes",
+          "Occurrences": "occurrences"
+        },
+        "alertDetailsOverride": {
+          "alertDisplayNameFormat": "Analytic Rule '{{SentinelResourceName}}' failed with '{{IssuesCodes}}'.\n",
+          "alertDescriptionFormat": "The analytic rule '{{SentinelResourceName}}' failed {{occurrences}} time(s) with error codes: {{IssuesCodes}}.\n"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

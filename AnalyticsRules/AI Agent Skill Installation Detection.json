@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "AI Agent Skill Installation Detection.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "b14d08f5-99e3-48ca-8241-fbe806a3bc53"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "AI Agent Skill Installation Detection",
+        "description": "Detects installation of AI agent skills using the 'clawhub install' command.\nThe rule compares installed skills against the Approved_AI_Agent_Skills\nwatchlist for tuning purposes. The rule will not fail if the watchlist\ndoes not exist.\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "let ApprovedSkills = union isfuzzy=true\n    (_GetWatchlist('Approved_AI_Agent_Skills') | project SkillName),\n    (datatable(SkillName:string)[])\n| distinct SkillName;\nDeviceProcessEvents\n| where Timestamp > ago(1h)\n| where ProcessCommandLine has \"clawhub install\"\n| extend SkillName = extract(@\"\\bclawhub\\s+install\\s+([^\\s]+)\", 1, ProcessCommandLine)\n| where isnotempty(SkillName)\n| where SkillName !in (ApprovedSkills)\n| summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()\n    by DeviceName, InitiatingProcessAccountName, SkillName\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution",
+          "Persistence"
+        ],
+        "techniques": [
+          "T1059",
+          "T1505"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "InitiatingProcessAccountName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

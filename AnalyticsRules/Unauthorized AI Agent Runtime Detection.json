@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Unauthorized AI Agent Runtime Detection.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "8e274b6e-29f0-44f6-becd-76b82991eb5c"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Unauthorized Self-Hosted AI Runtime Detected",
+        "description": "Detects execution or installation activity associated with self-hosted AI agent frameworks and autonomous AI tooling (such as OpenClaw, Moltbot, Clawdbot, AutoGPT, BabyAGI, Hermes, OpenInterpreter, CrewAI, LangChain, LangGraph, AutoGen, and related ecosystems) on devices not explicitly approved in the Approved_AI_Agent_Runtimes watchlist.\nThe detection focuses on runtime and package-management behavior involving Python, NodeJS, Docker, Podman, npm, pip, and related execution frameworks to reduce false positives from simple keyword searches, administrative discovery activity, or threat-hunting commands.\n",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "let ApprovedDevices = union isfuzzy=true\n  (_GetWatchlist('Approved_AI_Agent_Runtimes') | project DeviceName),\n  (datatable(DeviceName:string)[])\n| distinct DeviceName;\nlet SuspiciousKeywords = dynamic([\n  \"openclaw\",\n  \"moltbot\",\n  \"clawdbot\",\n  \"autogpt\",\n  \"babyagi\",\n  \"hermes\",\n  \"openinterpreter\",\n  \"autogen\",\n  \"crewai\",\n  \"langchain\",\n  \"langgraph\",\n  \"gpt-engineer\",\n  \"aider\",\n  \"devika\",\n  \"swarms\"\n]);\nDeviceProcessEvents\n| where Timestamp > ago(1h)\n| where DeviceName !in (ApprovedDevices)\n| where\n  ProcessCommandLine has_any (SuspiciousKeywords)\n  or FileName has_any (SuspiciousKeywords)\n// Focus on actual runtime / installation activity/instead of grep/find/hunting activity\n| where\n  FileName startswith \"python\"\n  or FileName in~ (\n      \"node\",\n      \"docker\",\n      \"podman\",\n      \"npm\",\n      \"pip\",\n      \"pip3\",\n      \"uv\"\n  )\n| summarize \n  FirstSeen=min(Timestamp),\n  LastSeen=max(Timestamp),\n  EventCount=count(),\n  SampleCommand=any(ProcessCommandLine),\n  ParentProcess=any(InitiatingProcessFileName),\n  ParentCommand=any(InitiatingProcessCommandLine)\n by DeviceName, InitiatingProcessAccountName, FileName\n| order by LastSeen desc\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T1059"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "InitiatingProcessAccountName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "Tables_Stopped_Logging_HIGH.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "b305f1ea-1a25-40e4-b602-2d79acf6ebd8"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "Tables stopped logging - HIGH",
+        "description": "Monitors data ingestion for high-priority tables.\nQuery to display recent events:\n\nlet _step = 1h;\nlet lookback = 50h;\nunion isfuzzy=true\nSecurityEvent,\nWindowsEvent,\nCommonSecurityLog,\nSyslog,\nASimDnsActivityLogs\n| make-series count() default=0 on TimeGenerated from bin(ago(lookback),_step) to bin(now(),_step) step _step by Type\n| render  timechart",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Service Ticket #4067293 - Tables stopped logging\n// HIGH: compare the latest 1 hour (4*15min) with the previous baseline of 1day (96*15min)\nlet slot_duration = 15m;\nlet check_slots = 4;\nlet full_slots = 96 + check_slots;\nlet baseline_slots = full_slots - check_slots;\nlet enough_slots = toint(baseline_slots/2); // At least 50% slots are needed to calculate the baseline\n// raise an alert if the average of the latest slots is smaller by 90% (1-0.1) of the trimmed average of the baseline\nlet threshold_percentage = 0.10;\nlet threshold_percentile_High = 98;  // -- describe\nlet threshold_percentile_Low  = 2;  // -- describe\n/////////////////////////////////////////////////////\nlet currenttime = now(); // - 1h; //datetime(2025-03-18T13:00:00Z); // useful for debugging\nlet full_time = full_slots * slot_duration;\nlet check_time = check_slots * slot_duration;\nlet full_start = bin(currenttime - full_time, slot_duration); // Round the start time to the nearest full slot time\nlet full_now = bin(currenttime, slot_duration); // Round the end time to the nearest full slot time\nlet AnalysedTables =  (datatable(Type:string) [\n    \"SecurityEvent\",\n    \"WindowsEvent\",\n    \"CommonSecurityLog\",\n    \"Syslog\",\n    \"ASimDnsActivityLogs\"\n]);\nlet t_slot_counts = union isfuzzy=true\n    (SecurityEvent       | where TimeGenerated between (full_start .. full_now) |  summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),\n    (WindowsEvent        | where TimeGenerated between (full_start .. full_now) |  summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),\n    (CommonSecurityLog   | where TimeGenerated between (full_start .. full_now) |  summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),\n    (Syslog              | where TimeGenerated between (full_start .. full_now) |  summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),\n    (ASimDnsActivityLogs | where TimeGenerated between (full_start .. full_now) |  summarize count_slot = count() by bin(TimeGenerated, slot_duration), Type),\n    (datatable()[]);\nlet t_baseline_raw = t_slot_counts | where TimeGenerated between (full_start .. (full_now - check_time -1ms)); // baseline considers all the slots excluding the ones in the check_time time window\nlet t_baseline_filter_enough_slots = (t_baseline_raw | summarize slots = count() by Type)\n| join t_baseline_raw on Type\n| where slots > enough_slots; // Ignore if we do not have enough data points\nlet t_baseline = t_baseline_filter_enough_slots\n| summarize percHigh = percentile(count_slot, threshold_percentile_High), percLow = percentile(count_slot, threshold_percentile_Low) by Type\n| join t_baseline_filter_enough_slots on Type\n| where percLow <= count_slot and count_slot <= percHigh\n| summarize count_baseline = toint(avg(count_slot)) by Type; // and then takes trimmed AVERAGE value\nlet t_check = t_slot_counts\n| where TimeGenerated >= full_now - check_time  // Slots to check: considers all the slots in the check_time time window\n| summarize count_check = toint(avg(count_slot)) by Type; // and then takes the average of these slots\n// Now join with the static AnalysedTables to ensure that even tables with completely missing entries are reported\nlet t_output = AnalysedTables\n| join kind=fullouter (t_baseline) on Type\n| join kind=fullouter (t_check) on Type\n| extend count_baseline = coalesce(count_baseline, 0), count_check = coalesce(count_check, 0)\n//| order by case(count_baseline == 0, 1, 0) asc, Type asc // this is just for easier debugging\n// Alert if the current average is lower than X% of the average value in the baseline\n| where count_baseline > 0 and count_check < max_of(1,round(threshold_percentage * count_baseline,0));\n// Add a column with the list of affected tables per customer\nlet t_affectedtables = t_output | summarize AffectedTables=array_strcat(todynamic(make_set(Type,100)),\",\");\nt_output | extend OtherAffectedTables = toscalar(t_affectedtables)\n| project Table=Type, count_baseline, count_check, OtherAffectedTables, TimeSlot = full_now",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT25H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1629"
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "P1D",
+            "matchingMethod": "Selected",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": [
+              "Table"
+            ]
+          }
+        },
+        "customDetails": {
+          "Table": "Table",
+          "OtherAffectedTables": "OtherAffectedTables"
+        },
+        "alertDetailsOverride": {
+          "alertDisplayNameFormat": "Tables stopped logging - HIGH - {{Table}}",
+          "alertDynamicProperties": []
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "MDE_Servers_Monitoring.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "20c7fd22-cad2-4a34-9c3a-c09b127d221b"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "MDE Servers Monitoring",
+        "description": "Detects Microsoft Defender for Endpoint (MDE) sensors on servers that either \n- Were previously active but have stopped reporting for at least threshold_hours.\n- Never reported as active during the lookback period.",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "// Service Ticket #4339732 - SOCe | Rules for mde agents health monitoring\nlet ExcludedServers = (_GetWatchlist(\"Excluded_Servers\") |extend server_name = column_ifexists('server_name',\"\") |distinct server_name |project SearchKey = (server_name)); //Added to exclude known servers\nlet lookback = 14d;\nlet threshold_hours = 24; // for at least how many hours the agent must have gone inactive\nlet TenantIdTable = materialize(\n    union isfuzzy=true\n        (ThreatIntelIndicators | where TimeGenerated > ago(1d) | where isnotempty(AzureTenantId)  | take 1 | project TenantId = AzureTenantId),\n        (OfficeActivity        | where TimeGenerated > ago(1d) | where isnotempty(OrganizationId) | take 1 | project TenantId = OrganizationId),\n        (SigninLogs            | where TimeGenerated > ago(1d) | where isnotempty(AADTenantId)    | take 1 | project TenantId = AADTenantId)\n    | take 1\n);\nlet tid = coalesce(toscalar(TenantIdTable | project TenantId), \"00000000-0000-0000-0000-000000000000\");\nlet FilteredDevices = materialize(\n  DeviceInfo \n  | where TimeGenerated > ago(lookback) \n  | where OnboardingStatus == \"Onboarded\"\n  | where DeviceType == \"Server\"\n  | project DeviceName, DeviceId, TimeGenerated, Timestamp, tostring(SensorHealthState)\n);\nlet NeverActiveDevice = FilteredDevices\n| summarize make_set(SensorHealthState,10) by DeviceId\n| where not(set_has_element(set_SensorHealthState, \"Active\"))\n| lookup kind=inner FilteredDevices on DeviceId\n| summarize arg_max(TimeGenerated, *) by DeviceId\n| extend HoursSinceLastActive = -1;\nlet PreviousActiveDevices = FilteredDevices\n| summarize arg_max(TimeGenerated, *) by DeviceId\n| join kind=inner (\n  FilteredDevices\n  | where SensorHealthState == \"Active\"\n  | summarize arg_max(TimeGenerated, *) by DeviceId\n  | project DeviceId, TimeGeneratedWhenLastActive = TimeGenerated, TimestampWhenLastActive = Timestamp\n) on DeviceId\n| where SensorHealthState != \"Active\" and TimeGenerated > TimeGeneratedWhenLastActive\n| extend HoursSinceLastActive = datetime_diff('hour', now(), TimeGeneratedWhenLastActive)\n| where HoursSinceLastActive > threshold_hours;\nunion PreviousActiveDevices, NeverActiveDevice\n| extend SinceLastActiveDescription = iff(HoursSinceLastActive >= 0, strcat(\"Hours since last active: \", tostring(HoursSinceLastActive)), strcat(\"Never Active in \", toint(lookback/1d), \" days\"))\n| project DeviceId, DeviceName, SensorHealthState, HoursSinceLastActive, SinceLastActiveDescription, TimeGenerated, TimeGeneratedWhenLastActive, TimestampWhenLastActive\n| where DeviceName !in (ExcludedServers)\n| extend MDEDeviceLink = strcat(\"https://security.microsoft.com/machines/\", DeviceId, \"?tid=\", tid)",
+        "queryFrequency": "PT12H",
+        "queryPeriod": "P14D",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1629"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "AzureID",
+                "columnName": "DeviceId"
+              }
+            ]
+          }
+        ],
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "P3D",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [
+              "Host"
+            ],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "customDetails": {
+          "SensorHealthState": "SensorHealthState",
+          "MDEDeviceLink": "MDEDeviceLink"
+        },
+        "alertDetailsOverride": {
+          "alertDisplayNameFormat": "MDE Sensor {{SensorHealthState}} on: {{DeviceName}}",
+          "alertDescriptionFormat": "MDE Sensor on {{DeviceName}} is in state: {{SensorHealthState}} - {{SinceLastActiveDescription}}",
+          "alertDynamicProperties": [
+            {
+              "alertProperty": "AlertLink",
+              "value": "MDEDeviceLink"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

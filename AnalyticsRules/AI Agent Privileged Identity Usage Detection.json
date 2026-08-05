@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "AI Agent Privileged Identity Usage Detection.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "1d4394c9-1e30-45e1-966a-dc0dc1066d40"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "AI Agent Privileged Identity Usage Detection",
+        "description": "Detects AI agent runtimes (OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI)\nexecuting under privileged, system, or service accounts.\nFocuses on identity misuse and excessive privilege exposure risk\naligned with AI runtime isolation concerns.\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceProcessEvents\n| where Timestamp > ago(1h)\n| where ProcessCommandLine has_any (\"openclaw\",\"moltbot\",\"clawdbot\",\"autogpt\",\"babyagi\")\n| where InitiatingProcessAccountName has_any (\"admin\",\"administrator\")\n    or InitiatingProcessAccountName endswith \"$\"\n    or ProcessIntegrityLevel in (\"High\",\"System\")\n| summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()\n    by DeviceName, InitiatingProcessAccountName, ProcessIntegrityLevel, FileName\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "PrivilegeEscalation",
+          "CredentialAccess",
+          "Execution"
+        ],
+        "techniques": [
+          "T1078",
+          "T1068",
+          "T1059"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "InitiatingProcessAccountName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}

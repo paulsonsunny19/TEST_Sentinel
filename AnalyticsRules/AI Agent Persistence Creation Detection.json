@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "source": "AI Agent Persistence Creation Detection.yaml",
+    "generator": "convert_sentinel_yaml.py"
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "Microsoft Sentinel Log Analytics workspace name"
+      }
+    }
+  },
+  "variables": {
+    "ruleId": "deb9eba3-5eca-4592-95ea-bdfe91498920"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "apiVersion": "2023-12-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('ruleId'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "AI Agent Persistence Creation Detection",
+        "description": "Detects persistence mechanisms created by AI agent runtimes\n(OpenClaw, Moltbot, ClawDBot, AutoGPT, BabyAGI).\nFocuses on scheduled task creation, service installation, and\nregistry-based autorun modifications that may indicate long-term foothold attempts.\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceProcessEvents\n| where Timestamp > ago(1h)\n| where InitiatingProcessCommandLine has_any (\"openclaw\",\"moltbot\",\"clawdbot\",\"autogpt\",\"babyagi\")\n| where ProcessCommandLine has_any (\n    \"schtasks /create\",\n    \"sc create\",\n    \"reg add\",\n    \"\\\\Run\",\n    \"\\\\RunOnce\",\n    \"Startup\",\n    \"New-Service\",\n    \"Set-Service\"\n)\n| summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), EventCount=count()\n    by DeviceName, InitiatingProcessAccountName, FileName, ProcessCommandLine\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT1H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "tactics": [
+          "Persistence",
+          "PrivilegeEscalation"
+        ],
+        "techniques": [
+          "T1547",
+          "T1053",
+          "T1543"
+        ],
+        "entityMappings": [
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "InitiatingProcessAccountName"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "analyticsRuleId": {
+      "type": "string",
+      "value": "[variables('ruleId')]"
+    }
+  }
+}
