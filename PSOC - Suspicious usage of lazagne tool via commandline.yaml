@@ -1,0 +1,65 @@
+﻿id: 89eb7c12-c0b3-4559-a4da-56ed127a0bdc
+name: PSOC - Suspicious usage of lazagne tool via commandline
+kind: Scheduled
+description: Detects lazagne, The LaZagne project is an open source application used to retrieve lots of passwords stored on a local computer. Can be used by attackers.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1003
+query: |+
+  // Detects the use of the lazagne attacker tool
+  let Parent_Process = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all = dynamic(["all"]);
+  let cmd_any = dynamic(["-oN","-oJ","-oA","-quiet","-vv"]);
+  let query1 = 
+  _Im_ProcessCreate(parentprocess_has_any=Parent_Process,commandline_has_all=cmd_all,commandline_has_any=cmd_any);
+  let cmd_any2 = dynamic(["all","browsers","windows","sysadmin","memory","databases"]);
+  let query2 = 
+  _Im_ProcessCreate(parentprocess_has_any=Parent_Process,commandline_has_any=cmd_any2,targetprocess_has_any="lazagne.exe");
+  union isfuzzy=true
+  query1,query2
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

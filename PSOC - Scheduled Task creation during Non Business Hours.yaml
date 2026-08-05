@@ -1,0 +1,64 @@
+﻿id: 519cc3e9-8f9d-4cbe-9947-b3affb274fe3
+name: PSOC - Scheduled Task creation during Non Business Hours
+kind: Scheduled
+description: scheduled tasks on servers are usually not created out of hours, this could be the work of an attacker.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1053
+query: |+
+  let server_names = 
+  DeviceInfo 
+  | where TimeGenerated > ago(7d) 
+  | where DeviceType == 'Server'
+  | distinct DeviceName;
+  let process_names = dynamic(["schtasks.exe"]);
+  let cmd_all = dynamic(["/create"]);
+  _Im_ProcessCreate(targetprocess_has_any=process_names,commandline_has_all=cmd_all)
+  | where datetime_part("hour", TimeGenerated) !between (7 .. 19)
+  | where Dvc in (server_names)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

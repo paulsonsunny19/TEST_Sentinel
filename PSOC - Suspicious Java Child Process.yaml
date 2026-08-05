@@ -1,0 +1,59 @@
+﻿id: 4f2a143a-774e-42ea-833c-fc0a8bf72f44
+name: PSOC - Suspicious Java Child Process
+kind: Scheduled
+description: |-
+  Detects suspicious child processes of Java 
+  this could indicate code execution.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T0863
+query: |-
+  let ProcessNames = dynamic(["regsvcs.exe","microsoft.workflow.compiler.exe","msbuild.exe","regsvr32.exe","devtoolslauncher.exe","vsjitdebugger.exe","mavinject.exe","presentationhost.exe","ftp.exe","appvlp.exe","certutil.exe","ieexec.exe","bash.exe","sqltoolsps.exe","wsl.exe","jjs.exe","bitsadmin.exe","installutil.exe","syncappvpublishingserver.exe","tracker.exe","regasm.exe","runscripthelper.exe","sqlps.exe","atbroker.exe","schtasks.exe","hh.exe","mshta.exe","verclsid.exe","msxsl.exe","odbcconf.exe","bginfo.exe","msdt.exe"]);
+  let parent_processes = dynamic(["java.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames,parentprocess_has_any=parent_processes)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

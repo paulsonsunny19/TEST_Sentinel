@@ -1,0 +1,61 @@
+﻿id: 72a105db-f1cf-4d0d-9560-af56604cc02b
+name: PSOC - Detects suspicious execution of cab files
+kind: Scheduled
+description: detects suspicious cab file execution
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T0863
+query: |-
+  //detects suspicious cab file execution
+  _Im_ProcessCreate
+  | where TargetProcessName has "expand.exe"
+  | where ParentProcessName has_any ("cmd.exe","powershell.exe")
+  | where CommandLine matches regex @".*(?i).cab"
+  | where CommandLine matches regex @".*(?i)f:\\*"
+  | where not (CommandLine matches regex @"(?i)c\\:\\ProgramData\\microsoft\\autopatchsetup\\autopatch(.*)\.cab")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

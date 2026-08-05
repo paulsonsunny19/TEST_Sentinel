@@ -1,0 +1,56 @@
+﻿id: 8a06a984-dab0-426c-b07a-7f4a17a08c02
+name: PSOC - Fsutil Behavior Set SymlinkEvaluation
+kind: Scheduled
+description: Detects execution of fsutil.exe with arguments that attempt to change symbolic link evaluation behavior via the behavior set SymlinkEvaluation command. This activity may indicate an attempt to enable insecure Remote-to-Local (R2L) or Remote-to-Remote (R2R) symlink access, which is disabled by default in Windows due to security risks.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1059
+query: |-
+  // Detects execution of fsutil.exe with arguments that attempt to change symbolic link evaluation behavior via the behavior set SymlinkEvaluation command. This activity may indicate an attempt to enable insecure Remote-to-Local (R2L) or Remote-to-Remote (R2R) symlink access, which is disabled by default in Windows due to security risks. 
+  SecurityEvent
+  | where EventID in (4688,1)
+  | where Process  has "fsutil.exe"
+  | where CommandLine has_all ("behavior", "set", "SymlinkEvaluation")
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

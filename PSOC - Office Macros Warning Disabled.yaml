@@ -1,0 +1,55 @@
+﻿id: 2b5068c8-0aa3-4ae7-8f50-2011572acf3a
+name: PSOC - Office Macros Warning Disabled
+kind: Scheduled
+description: Detects the registry changes made to disabled macro warnings
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  //Detects the use of registry changes to turn off macro warnings.
+  let eventtype = dynamic(["RegistryValueSet"]);
+  let RegistryValue = dynamic(["VBAWarnings"]);
+  let RegistryValueData = dynamic(["DWORD (0x00000001)"]);
+  _Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrydata_has_any=RegistryValueData)
+  | where RegistryKey contains "\\Software\\Microsoft\\Office\\" and RegistryKey contains "\\Common\\Security"
+  | extend
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      CommandLine = tostring(column_ifexists("ActingProcessCommandLine", "")),
+      ProcessId = tostring(column_ifexists("ActingProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

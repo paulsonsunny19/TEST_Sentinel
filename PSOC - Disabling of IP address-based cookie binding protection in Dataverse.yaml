@@ -1,0 +1,41 @@
+custom_KQLCommentsPrefix:
+  - 'Service Ticket #4363573 Rather than looking for the disabling followed by suspicious activity, Rule changed to alert for disabling only.'
+id: d7c9549c-7246-4555-8e53-d7b0db546764
+kind: Scheduled
+name: PSOC - Disabling of IP address-based cookie binding protection in Dataverse
+description: Identifies disabling of cookie binding protection in Dataverse. See https://docs.microsoft.com/power-platform/admin/block-cookie-replay-attack
+severity: Medium
+status: Available
+requiredDataConnectors:
+  - connectorId: Dataverse
+    dataTypes:
+      - DataverseActivity
+queryFrequency: 1h
+queryPeriod: 2h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - DefenseEvasion
+relevantTechniques:
+  - T1629
+query: |
+  DataverseActivity
+  | where Message == "Update" and EntityName == "organization"
+  | mv-expand Fields
+  | where Fields.Name == "enableipbasedcookiebinding" and Fields.Value == 'False'
+  | summarize CookieBindingDisabled = min(TimeGenerated)
+      by CookieBindingDisabledBy = UserId, InstanceUrl
+  | extend
+      Account = tostring(column_ifexists("CookieBindingDisabledBy",""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+alertDetailsOverride:
+  alertDisplayNameFormat: Dataverse -IP address-based cookie binding disabled
+  alertDescriptionFormat: IP address-based cookie binding was disabled by in {{InstanceUrl}}.
+customDetails: {}
+version: 3.2.0

@@ -1,0 +1,52 @@
+﻿id: 8e383cfe-2d9e-4dea-9286-e8267ac3f99d
+name: PSOC - New Enumeration tool was installed
+kind: Scheduled
+description: Detects common enumeration tools being installed.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Discovery
+relevantTechniques:
+- T1046
+query: |-
+  DeviceEvents
+  | where ActionType == "ServiceInstalled"
+  | where tostring(AdditionalFields.ServiceName) matches regex @"(?i)(nmap|nuclei|massscan|angryIP|zmap|shodan|ipscan)"
+  | extend
+    Computer = tostring(column_ifexists("DeviceName", "")),
+    Account = tostring(column_ifexists("AccountName", "")),
+    ProcessId = tostring(column_ifexists("InitiatingProcessId", "")),
+    CommandLineMapped = tostring(column_ifexists("InitiatingProcessCommandLine", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

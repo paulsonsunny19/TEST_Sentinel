@@ -1,0 +1,49 @@
+﻿id: 35c3fc68-d9f6-4838-aa14-ede7660a17cb
+name: PSOC - OFFICE 365 [New Inbox Rule to Auto Delete Email]
+kind: Scheduled
+description: |-
+  Attackers often create auto-deletion rules to cover their tracks after compromising a mailbox.
+  Review the inbox rule logic to determine if it is suspicious.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1564
+query: |-
+  //Attackers often create auto-deletion rules to cover their tracks after compromising a mailbox.
+  //Review the inbox rule logic to determine if it is suspicious.
+  OfficeActivity
+  | where Operation == "New-InboxRule"
+  | where Parameters has_any ("DeleteMessage")
+  | where Parameters has_any ("SubjectOrBodyContainsWords","SubjectContainsWords")
+  | extend
+      Account = tostring(column_ifexists("UserId", "")),
+      SourceIP = tostring(column_ifexists("ClientIP", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

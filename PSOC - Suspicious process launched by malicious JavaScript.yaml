@@ -1,0 +1,58 @@
+﻿id: 02215a60-438e-479e-b50d-44e87825e733
+name: PSOC - Suspicious process launched by malicious JavaScript
+kind: Scheduled
+description: Shai Hulud 2.0 supply chain attack
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- InitialAccess
+relevantTechniques:
+- T0862
+query: |+
+  // Shai Hulud 2.0 supply chain attack
+
+  DeviceProcessEvents | where InitiatingProcessFileName in~ ("node", "node.exe") and InitiatingProcessCommandLine endswith ".js"
+  | where (FileName in~ ("bun", "bun.exe") and ProcessCommandLine has ".js")
+      or (FileName  in~ ("cmd.exe") and ProcessCommandLine has_any ("where bun", "irm ", "[Environment]::GetEnvironmentVariable('PATH'", "|iex"))
+      or (ProcessCommandLine in~ ("sh", "dash", "bash") and ProcessCommandLine has_any ("which bun", ".bashrc && echo $PATH", "https://bun.sh/install"))
+  | where ProcessCommandLine !contains "bun" and ProcessCommandLine !contains "\\" and ProcessCommandLine !contains "--"
+  | extend
+      Computer = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("InitiatingProcessAccountName", "")),
+      ProcessId = tostring(column_ifexists("ProcessId", "")),
+      CommandLineMapped = tostring(column_ifexists("ProcessCommandLine", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

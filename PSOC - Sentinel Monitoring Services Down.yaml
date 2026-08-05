@@ -1,0 +1,34 @@
+id: 45bdfab8-346d-42c6-9444-ba281fdfa5cb
+name: PSOC - Sentinel Monitoring Services Down
+kind: NRT
+description: This rule is created to monitor if there is any downtime for Sentinel and logs are not being written into tables.
+severity: High
+tactics:
+- Impact
+relevantTechniques:
+- T1529
+query: |-
+  SecurityAlert
+  | where TimeGenerated > ago(500m)
+  | where AlertName contains "Tables stopped logging - HIGH"
+  | extend TableName = tostring(split(AlertName, " - ")[-1])
+  | summarize DistinctTables = dcount(TableName), Tables = make_set(TableName) by bin(TimeGenerated, 500m)
+  | where DistinctTables >= 2
+suppressionEnabled: true
+eventGroupingSettings:
+  aggregationKind: AlertPerResult
+suppressionDuration: 1d
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+customDetails:
+  AffectedTables: Tables
+  Table: Tables
+

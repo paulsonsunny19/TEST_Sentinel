@@ -1,0 +1,72 @@
+﻿id: 561606b7-4f82-42a6-9483-fd5d3dd8ff02
+name: PSOC - UAC bypass via Fodhelper
+kind: Scheduled
+description: |-
+  detects the use of fodhelper to bypass UAC
+  Attackers use this to escalate privileges
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- PrivilegeEscalation
+- DefenseEvasion
+relevantTechniques:
+- T1548
+- T1626
+query: |-
+  //detects the use of fodhelper to bypass UAC
+  //Attackers use this to escalate privileges
+  let UAC_Bypass_Fodhelper_1 =
+  SecurityEvent
+  | where CommandLine has_any ("New-ItemProperty","Set-ItemProperty")
+  | where CommandLine has @"\Software\Classes\ms-settings\Shell\Open\command"
+  | where CommandLine has_any ("DelegateExecute","(default)")
+  | project Computer, BB1_Time = TimeGenerated, BB1_Command = CommandLine;
+  let UAC_Bypass_Fodhelper_2 =
+  SecurityEvent
+  | where CommandLine has "C:\\Windows\\System32\\fodhelper.exe"
+  | project Computer, BB2_Time = TimeGenerated, BB2_Command = CommandLine;
+  UAC_Bypass_Fodhelper_1
+  | join kind=inner (UAC_Bypass_Fodhelper_2) on Computer
+  | where BB2_Time between (BB1_Time .. BB1_Time + 1m)
+  | project Computer, BB1_Time, BB1_Command, BB2_Time, BB2_Command
+  | sort by BB1_Time desc
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped  
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

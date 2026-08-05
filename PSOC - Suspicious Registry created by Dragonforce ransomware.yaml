@@ -1,0 +1,54 @@
+﻿id: 24fbd12c-2e1b-4548-8cab-fe3862601382
+name: PSOC - Suspicious Registry created by Dragonforce ransomware
+kind: Scheduled
+description: detects creation of tunneling registry key known to by a TTP of Dragonforce ransomware
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Exfiltration
+relevantTechniques:
+- T1041
+query: |-
+  // detects creation of tunneling registry key known to by a TTP of Dragonforce ransomware
+  let eventtype = dynamic(["RegistryValueSet"]);
+  let RegistryValue = dynamic(["socks5"]);
+  let RegistryKey = dynamic(["Software\\Microsoft\\Windows\\CurrentVersion\\Run"]);
+  _Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrykey_has_any=RegistryKey)
+  | extend
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      CommandLine = tostring(column_ifexists("ActingProcessCommandLine", "")),
+      ProcessId = tostring(column_ifexists("ActingProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

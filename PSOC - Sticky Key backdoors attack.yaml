@@ -1,0 +1,66 @@
+﻿id: 8ecadf37-9dd7-49bc-bed6-1a1a7d887980
+name: PSOC - Sticky Key backdoors attack
+kind: Scheduled
+description: This detects attempts to bypass the windows login screen
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- PrivilegeEscalation
+relevantTechniques:
+- T1546.008
+query: |-
+  // This detects attempts to register a debugger to make it available on the login screen
+  // This can be used to bypass authentication in windows
+  let cmd_all = dynamic(["\\CurrentVersion\\Image File Execution Options","Debugger"]);
+  let cmd_any = dynamic(["sethc.exe","utilman.exe","osk.exe","magnify.exe","narrator.exe","displayswitch.exe"]);
+  let query1 = 
+  _Im_ProcessCreate(commandline_has_any=cmd_any,commandline_has_all=cmd_all);
+  // This is another method, copying cmd over sethc to make it available on the login screen
+  let cmd_all2 = dynamic(["copy","/y","C:\\windows\\system32\\cmd.exe C:\\windows\\system32\\sethc.exe"]);
+  let query2 = 
+  _Im_ProcessCreate(commandline_has_all=cmd_all2);
+  union isfuzzy=true
+  query1,query2
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

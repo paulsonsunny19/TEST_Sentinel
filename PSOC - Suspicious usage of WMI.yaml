@@ -1,0 +1,80 @@
+﻿id: e2296311-e8d3-4efe-ac10-9b0508ad880d
+name: PSOC - Suspicious usage of WMI
+kind: Scheduled
+description: This rule captures various suspicious uses of WMI that attackers may use.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1047
+query: |-
+  //wmic allows admins to run remote commands and manage systems remotely.
+  //while this has been superceded by Powershell, attackers still abuse wmic to move laterally or escalate privileges.
+  //this rule has a number of queries designed to match suspicious activity, and will trigger an incident if any one of them is matched.
+  // Detects the suspicious use of legitimate wmic.exe to excute processes
+  let parent_processes = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all1 = dynamic(["process call create"]);
+  let query1 = 
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all1,targetprocess_has_any="wmic.exe");
+  // Detects recon carried out using wmic
+  let cmd_all2 = dynamic(["wmic","process","get","caption","executable path"]);
+  let query2 = 
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all2,targetprocess_has_any="wmic.exe");
+  // Detects listing of remote services
+  let cmd_all3 = dynamic(["wmic","node","service","where"]);
+  let query3 = 
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all3,targetprocess_has_any="wmic.exe");
+  // Detects wmic used as a recon tool
+  let cmd_all4 = dynamic(["wmic","qfe","get","description","installedOn"]);
+  let query4 = 
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all4,targetprocess_has_any="wmic.exe");
+  // Detects the enumeration of users 
+  let cmd_all5 = dynamic(["wmic","useraccount","get /ALL"]);
+  let query5 = 
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all5,targetprocess_has_any="wmic.exe");
+  union isfuzzy=true
+  query1,query2,query3,query4,query5
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

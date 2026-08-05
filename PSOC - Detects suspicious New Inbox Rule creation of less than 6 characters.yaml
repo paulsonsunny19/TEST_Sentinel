@@ -1,0 +1,55 @@
+﻿id: aafb6056-d9bb-498f-a23f-237e4b5949bd
+name: PSOC - Detects suspicious New Inbox Rule creation of less than 6 characters
+kind: Scheduled
+description: |-
+  after a phish, attackers can create rules with short names to hide their tracks
+  these rules may hide emails by deleting or archiving them, or forward mails to an attacker
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Collection
+relevantTechniques:
+- T1114
+query: |+
+  //after a phish, attackers can create rules with short names to hide their tracks
+  //these rules may hide emails by deleting or archiving them, or forward mails to an attacker
+  OfficeActivity
+  | where Operation == "New-InboxRule"
+  | parse Parameters with * '{"Name":"Name","Value":"'RuleName'"}' *
+  | where strlen(RuleName) <= 6
+  | extend
+      Account = tostring(column_ifexists("UserId", ""))
+  | project
+      TimeGenerated,
+      RecordType,
+      UserType,
+      Account,
+      Operation,
+      RuleName,
+      RuleNameLength = strlen(RuleName),
+      Type,
+      OrganizationName,
+      ResultStatus
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

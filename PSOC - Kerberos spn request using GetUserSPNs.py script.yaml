@@ -1,0 +1,62 @@
+﻿id: bee8b2e0-eb76-4c33-8a5b-98d0a6c1f736
+name: PSOC - Kerberos spn request using GetUserSPNs.py script
+kind: Scheduled
+description: detect Kerberos spn requests
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1558
+query: |-
+  //detect Kerberos spn requests
+  SecurityEvent
+  | where EventID == 4769
+  | parse EventData with * '<Data Name="ServiceName">' ServiceName '</Data>' *
+  | parse EventData with * '<Data Name="TicketEncryptionType">' TicketEncryptionType '</Data>' *
+  | parse EventData with * '<Data Name="Status">' Status '</Data>' *
+  | parse EventData with * '<Data Name="TicketOptions">' TicketOptions '</Data>' *
+  | where not(ServiceName matches regex @"(?i)^krbtgt$" or ServiceName matches regex @".*\$$")
+  | where TicketEncryptionType == "0x17"
+  | where Status == "0x0"
+  | where TicketOptions == "0x40810010"
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

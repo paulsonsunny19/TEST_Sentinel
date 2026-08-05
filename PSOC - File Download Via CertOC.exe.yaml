@@ -1,0 +1,61 @@
+﻿id: 7b017582-e692-41ee-87cc-9c8893e05808
+name: PSOC - File Download Via CertOC.exe
+kind: Scheduled
+description: |-
+  This rule detect the use of legitmate binary certoc to download malware or second stage payloads
+  certoc is a legitimate Microsoft process, but has been used in living-off-thje-land attacks
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CommandAndControl
+relevantTechniques:
+- T1544
+query: |-
+  // This rule detect the use of legitmate binary certoc to download malware or second stage payloads
+  // certoc is a legitimate Microsoft process, but has been used in living-off-thje-land attacks
+  let Parent_Process = dynamic(["cmd.exe","powershell.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any="certoc.exe",parentprocess_has_any=Parent_Process)
+  | where CommandLine matches regex "(?i)-getcacaps"
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

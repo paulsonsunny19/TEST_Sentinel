@@ -1,0 +1,60 @@
+﻿id: 7273aac9-bb49-4b23-868f-f0789e5a2018
+name: PSOC - Dumping of Sensitive Hives via Reg.exe
+kind: Scheduled
+description: attackers can use the registry to dump sensitive credentials
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1003
+query: |-
+  //attackers can use the registry to dump sensitive credentials
+  _Im_ProcessCreate (targetprocess_has_any='reg.exe')
+  | where CommandLine has_any ("save","export")
+  | where CommandLine has_any ("hkey_local_machine")
+  | where CommandLine has_any ("sam","system","security")
+  | where CommandLine has_any ("save")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

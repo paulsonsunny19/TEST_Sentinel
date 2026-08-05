@@ -1,0 +1,60 @@
+﻿id: 9fc900d7-3b23-4b68-83ad-447b6970b822
+name: PSOC - Possible Hoaxshell activity detected
+kind: Scheduled
+description: This detects hoaxshell, a popular powershell reverse shell. This was undetected by Av.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+- CommandAndControl
+relevantTechniques:
+- T1059
+query: |-
+  //This detects hoaxshell, a popular powershell reverse shell. This was undetected by Av.
+  _Im_ProcessCreate
+  | where TargetProcessName has "powershell.exe"
+  | where CommandLine has_any ("Invoke-RestMethod","Invoke-Expression","Invoke-WebRequest")
+  | where CommandLine has_all ("UTF8.GetBytes or System.Text.Encoding","UseBasicParsing","-ErrorAction Stop -ErrorVariable")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

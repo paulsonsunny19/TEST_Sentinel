@@ -1,0 +1,59 @@
+﻿id: d50be92d-0fe3-4766-9db0-6f8273b18382
+name: PSOC - Detects Powershell constrained language (CLM) bypass
+kind: Scheduled
+description: Detects attempted bypass of Powershell constrained language mode (CLM)attackers use this if they cannot downgrade powershell versions to run malicious commands
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1211
+query: |-
+  // Detects attempted bypass of Powershell constrained language mode (CLM)
+  // attackers use this if they cannot downgrade powershell versions to run malicious commands
+  let cmd_any = dynamic(["/logfile=","/LogToConsole=false"]);
+  let cmd_all = dynamic(["C:\\Windows\\Microsoft.NET\\Framework64\\","InstallUtil.exe","/U"]);
+  _Im_ProcessCreate(commandline_has_any=cmd_any,commandline_has_all=cmd_all)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

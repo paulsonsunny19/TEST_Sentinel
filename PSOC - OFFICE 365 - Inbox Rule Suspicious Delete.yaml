@@ -1,0 +1,47 @@
+﻿id: e136631f-13ed-40fa-8526-8563bf103bea
+name: PSOC - OFFICE 365 - Inbox Rule Suspicious Delete
+kind: Scheduled
+description: Detects the deletion of certain email types via a rule, common post compromise activity after a user is phished
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1564
+query: |-
+  //Detects the deletion of certain email types via a rule, common post compromise activity after a user is phished
+  OfficeActivity
+  | where Operation == "New-InboxRule"
+  | where Parameters has ("DeleteMessage")
+  | where Parameters has ("SubjectOrBodyContainsWords")
+  | where Parameters has_any ("Your document has been completed","your documents","please review")
+  | extend
+      Account = tostring(column_ifexists("UserId", "")),
+      SourceIP = tostring(column_ifexists("ClientIP", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

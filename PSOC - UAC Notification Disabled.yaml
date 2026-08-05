@@ -1,0 +1,56 @@
+﻿id: 11735053-87b5-4aa5-83c1-fed860052a3a
+name: PSOC - UAC Notification Disabled
+kind: Scheduled
+description: Detects the disabling of UAC popups
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- PrivilegeEscalation
+- DefenseEvasion
+relevantTechniques:
+- T1548
+query: |-
+  //Detects the disabling of UAC popups
+  let eventtype = dynamic(["RegistryValueSet"]);	
+  let RegistryValueData = dynamic(["DWORD (0x00000000)"]);
+  let RegistryValue = dynamic(["EnableLUA","ConsentPromptBehaviorAdmin","PromptOnSecureDesktop"]);
+  let RegistryKey = dynamic(["HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System","\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"]);
+  _Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValueData,registrykey_has_any=RegistryValue)
+  | extend
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      CommandLine = tostring(column_ifexists("ActingProcessCommandLine", "")),
+      ProcessId = tostring(column_ifexists("ActingProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

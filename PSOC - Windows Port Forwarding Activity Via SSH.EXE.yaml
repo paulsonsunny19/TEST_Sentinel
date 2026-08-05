@@ -1,0 +1,63 @@
+﻿id: 19ddcd3d-35e1-462c-ab7a-a73d9b1f0d88
+name: PSOC - Windows Port Forwarding Activity Via SSH.EXE
+kind: Scheduled
+description: |-
+  Detects port forwarding via ssh
+  Attackers use this to communicate using port 22 which can often be found open
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CommandAndControl
+- Exfiltration
+relevantTechniques:
+- T1219
+- T1041
+query: |-
+  // Detects port forwarding via ssh
+  // Attackers use this to communicate using port 22 which can often be found open
+  let ProcessNames = dynamic(["ssh.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames)
+  | where CommandLine matches regex @"(?i)\s-R\s+\d+[: ]"
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

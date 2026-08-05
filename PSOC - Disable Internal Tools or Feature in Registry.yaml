@@ -1,0 +1,57 @@
+﻿id: 886b6815-ce84-40a0-80eb-e895d65d85d2
+name: PSOC - Disable Internal Tools or Feature in Registry
+kind: Scheduled
+description: |-
+  This detects the setting of registry keys specific to disabling important security and admin tools.
+  Attackers may do this to evade detection.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |+
+  //This detects the setting of registry keys specific to disabling important security and admin tools.
+  //Attackers may do this to evade detection.
+  let eventtype = dynamic(["RegistryValueSet"]);
+  let RegistryValueData = dynamic(["DWORD (0x00000000)"]);
+  let RegistryValue = dynamic(["StartMenuLogOff","DisableChangePassword","DisableLockWorkstation","DisableRegistryTools","DisableTaskmgr","NoDispBackgroundPage","NoDispCPL","DisableNotificationCenter","DisableCMD","ConsentPromptBehaviorAdmin","shutdownwithoutlogon","Write Protection","WriteProtect","ToastEnabled"]);
+  _Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrydata_has_any=RegistryValueData)
+  | extend
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      CommandLine = tostring(column_ifexists("ActingProcessCommandLine", "")),
+      ProcessId = tostring(column_ifexists("ActingProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

@@ -1,0 +1,48 @@
+﻿id: 7bd2c1c5-c963-41ff-abaf-eae4bb3e6bce
+name: PSOC - Suspicious RdrLeakDiag Full Memory Dump Creation
+kind: Scheduled
+description: This rule detects the execution of rdrleakdiag.exe with the /fullmemdmp parameter, which is used to generate a full memory dump of a target process. While rdrleakdiag.exe is a legitimate Microsoft diagnostic tool, adversaries may abuse it to dump process memory and extract sensitive information such as credentials, authentication tokens, API keys, or other secrets. The rule looks for command-line usage consistent with memory dump creation, including the /p (process ID), /o (output directory), and /fullmemdmp switches.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CredentialAccess
+relevantTechniques:
+- T1003
+query: |+
+  // This rule detects the execution of rdrleakdiag.exe with the /fullmemdmp parameter, which is used to generate a full memory dump of a target process. While rdrleakdiag.exe is a legitimate Microsoft diagnostic tool, adversaries may abuse it to dump process memory and extract sensitive information such as credentials, authentication tokens, API keys, or other secrets. The rule looks for command-line usage consistent with memory dump creation, including the /p (process ID), /o (output directory), and /fullmemdmp switches.
+  SecurityEvent
+  | where EventID == 4688
+  | where EventSourceName == "Microsoft-Windows-Security-Auditing"
+  | where Process has "rdrleakdiag.exe"
+  | where ParentProcessName has_any ("cmd.exe", "powershell.exe")
+  | where CommandLine has_all ("/p", "/o", "/fullmemdmp")
+  | project
+      TimeGenerated,
+      CommandLine,
+      Computer,
+      Account,
+      ParentProcessName,
+      Process
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Account
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

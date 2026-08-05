@@ -1,0 +1,45 @@
+﻿id: 0abf1c20-2f42-4054-9ce6-5ab772bd9260
+name: PSOC - OFFICE 365 - Inbox Rule Mail Forward
+kind: Scheduled
+description: detects forwarding rules. internal forwarding can be a false positive.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Collection
+relevantTechniques:
+- T1114
+query: |-
+  //detects forwarding rules. internal forwarding can be a false positive.
+  OfficeActivity
+  | where Operation == "New-InboxRule"
+  | where Parameters has_any ("ForwardTo", "ForwardAsAttachmentTo", "RedirectTo")
+  | extend
+      Account = tostring(column_ifexists("UserId", "")),
+      SourceIP = tostring(column_ifexists("ClientIP", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

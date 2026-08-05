@@ -1,0 +1,46 @@
+﻿id: afcbedd2-b55e-4158-853f-23a3e3d85c85
+name: PSOC - OFFICE 365 [New Inbox Rule - MoveToFolder RSS or Archive or Conversation History]
+kind: Scheduled
+description: attackers often attempt to hide their activity after compromising a mailbox by archiving emails.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Collection
+relevantTechniques:
+- T1114
+query: |+
+  //attackers often attempt to hide their activity after compromising a mailbox by archiving emails.
+  OfficeActivity
+  | where Operation == "New-InboxRule"
+  | where Parameters has_any ("MoveToFolder")
+  | where Parameters has_any ("RSS","Archive","Conversation History")
+  | extend
+      Account = tostring(column_ifexists("UserId", "")),
+      SourceIP = tostring(column_ifexists("ClientIP", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

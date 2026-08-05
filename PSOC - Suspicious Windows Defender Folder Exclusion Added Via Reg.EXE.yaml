@@ -1,0 +1,58 @@
+﻿id: 17728b04-ee09-412c-8e72-2f87c2239ad0
+name: PSOC - Suspicious Windows Defender Folder Exclusion Added Via Reg.EXE
+kind: Scheduled
+description: Detects the use of reg.exe to exclude folders from AV
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  //Detects the use of reg.exe to exclude folders from AV
+  let cmd_any = dynamic(["SOFTWARE\\Microsoft\\Windows Defender\\Exclusions\\Paths","SOFTWARE\\Microsoft\\Microsoft Antimalware\\Exclusions\\Paths"]);
+  let cmd_all = dynamic(["add","/t","REG_DWORD","/v","/d","0"]);
+  _Im_ProcessCreate(commandline_has_any=cmd_any,commandline_has_all=cmd_all,targetprocess_has_any="reg.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

@@ -1,0 +1,65 @@
+﻿id: 3f8a64f2-c8bd-42a3-9c59-53d4922d608a
+name: PSOC - MiniPlasma WERPipe Named Pipe Access
+kind: Scheduled
+description: Detects access to the "MiniPlasmaWERPipe" named pipe, a known indicator of the MiniPlasma Windows privilege-escalation zero-day.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- PrivilegeEscalation
+query: |+
+  DeviceEvents
+  | where ActionType == "NamedPipeEvent"
+  | where AdditionalFields has "MiniPlasmaWERPipe"
+  | project
+      Timestamp,
+      DeviceName,
+      ActionType,
+      InitiatingProcessFileName,
+      InitiatingProcessSHA256,
+      InitiatingProcessId,
+      InitiatingProcessCommandLine,
+      AccountName,
+      PipeName = parse_json(AdditionalFields).PipeName  // Only parse when needed
+  | extend
+    Computer = tostring(column_ifexists("DeviceName", "")),
+    Account = tostring(column_ifexists("AccountName", "")),
+    ProcessId = tostring(column_ifexists("InitiatingProcessId", "")),
+    CommandLineMapped = tostring(column_ifexists("InitiatingProcessCommandLine", ""))
+  | where PipeName == @"\Device\NamedPipe\MiniPlasmaWERPipe"
+  | sort by Timestamp desc
+  | take 10  // Limit results
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

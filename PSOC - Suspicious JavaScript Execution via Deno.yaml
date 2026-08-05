@@ -1,0 +1,69 @@
+﻿id: dedf11d3-b30e-4423-a106-fa4a57f09897
+name: PSOC - Suspicious JavaScript Execution via Deno
+kind: Scheduled
+description: |-
+  Deno is a legitimate JavaScript/TypeScript runtime.  It is used to run scripts, build web servers, create command-line tools, and compile code into self-contained executables.
+  This rule fires when a Deno process is started with a command line matching suspicious patterns: javascript with base64, eval(, http, or javascript import. 
+  Such patterns are commonly used to run inline or remote scripts and can indicate abuse.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1059.007
+query: |+
+  // Deno is a legitimate JavaScript/TypeScript runtime.  It is used to run scripts, build web servers, create command-line tools, and compile code into self-contained executables. 
+  // This rule fires when a Deno process is started with a command line matching suspicious patterns: javascript with base64, eval(, http, or javascript import. 
+  // Such patterns are commonly used to run inline or remote scripts and can indicate abuse.
+  let deno_javascript_base64 = 
+  SecurityEvent
+  | where Process has "deno.exe"
+  | where CommandLine has_all ("javascript","base64");
+  let deno_javascript_eval = 
+  SecurityEvent
+  | where Process has "deno.exe"
+  | where CommandLine has_all ("eval","http","javascript","import");
+  union isfuzzy=true
+  deno_javascript_base64, deno_javascript_eval
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

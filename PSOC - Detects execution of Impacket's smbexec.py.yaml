@@ -1,0 +1,58 @@
+﻿id: 5def14cf-4d4e-452d-83d2-ac0653376f47
+name: PSOC - Detects execution of Impacket's smbexec.py
+kind: Scheduled
+description: Detects impacket through specific IOCs
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- LateralMovement
+relevantTechniques:
+- T0886
+query: |-
+  //Detects impacket through specific IOCs
+  SecurityEvent
+  | where EventID == 4697
+  | where ServiceName matches regex @"^[a-zA-Z]{8}$"
+  | where ServiceFileName matches regex @"%COMSPEC%\s+/Q\s+/c\s+echo"
+  | where ServiceFileName matches regex @"\\\\%COMPUTERNAME%\\C$\\__output\s+2\^\>\^\&1"
+  | where ServiceFileName matches regex @"%SYSTEMROOT%\\[a-zA-Z]{8}\.bat"
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

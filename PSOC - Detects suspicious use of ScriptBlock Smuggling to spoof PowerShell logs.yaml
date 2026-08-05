@@ -1,0 +1,60 @@
+﻿id: 0d541bf3-53a4-43e3-a8df-c07cba0889e0
+name: PSOC - Detects suspicious use of ScriptBlock Smuggling to spoof PowerShell logs
+kind: Scheduled
+description: ScriptBlock Smuggling is a technique used by attackers to bypass detection mechanisms, such as logging and security products, in PowerShell. The technique allows attackers to hide malicious PowerShell commands or scripts from the PowerShell ScriptBlock logging feature, which is designed to record and monitor every script that is executed. The main goal of ScriptBlock Smuggling is to make malicious activities invisible in the logs, making it difficult for defenders and incident responders to detect and analyze the attack.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+- Execution
+relevantTechniques:
+- T1027
+- T1059
+query: |-
+  //ScriptBlock Smuggling is a technique used by attackers to bypass detection mechanisms, such as logging and security products, in PowerShell. The technique allows attackers to hide malicious PowerShell commands or scripts from the PowerShell ScriptBlock logging feature, which is designed to record and monitor every script that is executed.
+  DeviceProcessEvents
+  | where FileName == 'powershell.exe'
+  | where ProcessCommandLine matches regex @"(?i)ast\s=\s\[ScriptBlock\]::Create"
+  | where ProcessCommandLine matches regex @"(?i)ast\s=\s\[System\.Management\.Automation\.Language\.ScriptBlockAst\]"
+  | where ProcessCommandLine matches regex @"(?i)\$executedast\.endblock\.copy"
+  | extend
+      Computer = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("InitiatingProcessAccountName", "")),
+      ProcessId = tostring(column_ifexists("ProcessId", "")),
+      CommandLine = tostring(column_ifexists("ProcessCommandLine", ""))
+  | where isnotempty(Computer)
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

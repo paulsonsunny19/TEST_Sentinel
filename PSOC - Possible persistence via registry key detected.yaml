@@ -1,0 +1,59 @@
+﻿id: fde3c86f-9920-49ba-a563-615096de4ae0
+name: PSOC - Possible persistence via registry key detected
+kind: Scheduled
+description: Detects persistence related registry changes
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Persistence
+- DefenseEvasion
+relevantTechniques:
+- T1037
+- T1112
+query: |-
+  //this is to restrict the rule to servers only, endpoints often match this during updates
+  let RegistryKey = dynamic(["\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run","\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx","\\Software\\Microsoft\\Windows\\CurrentVersion\\RunServices","\\Software\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce","\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders","\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders","\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce","\\Software\\Microsoft\\Windows\\CurrentVersion\\Run","\\software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Shell","\\software\\Microsoft\\Windows NT\\CurrentVersion\\Windows","\\Control\\Session Manager\\BootExecute","\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Event Viewer"]);
+  let process_Name  = dynamic(["cmd.exe","powershell.exe"]);
+  DeviceProcessEvents 
+  | where FileName  has "reg.exe"
+  | where ProcessCommandLine has_all ("reg", "add")
+  | where ProcessCommandLine has_any (RegistryKey)
+  | where InitiatingProcessFileName has_any (process_Name)
+  | extend
+      Computer = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("InitiatingProcessAccountName", "")),
+      ProcessId = tostring(column_ifexists("ProcessId", "")),
+      CommandLineMapped = tostring(column_ifexists("ProcessCommandLine", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

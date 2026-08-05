@@ -1,0 +1,60 @@
+﻿id: 0a06c000-4b5b-4810-9ea1-96ef74de19ef
+name: PSOC - Suspicious usage of Cobalt Strike psexec command
+kind: Scheduled
+description: |-
+  Detects the use of cobalt strike.
+  The default service installation will be a random 7 character named service.
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1569
+query: |-
+  //Service Ticket #4360554  - Exclude legitimate VirtualBox service installations to reduce false positives
+  // Service Ticket #4625479 - Exclude legitimate Memurai for Gridbeyond
+  //Detects CobaltStrike service installation, the name will be 7 random characters, and the filename will be an IP followed by 7 chars.exe
+  DeviceEvents
+  | where ActionType == "ServiceInstalled"
+  | where AdditionalFields.ServiceName matches regex @"^[\w]{7}$"
+  | where FileName matches regex @"^[\w]{7}\.exe$"
+  | where not(FolderPath startswith "C:\\Program Files\\Oracle\\VirtualBox")
+  | where AdditionalFields.ServiceName <> "Memurai"
+  | extend
+    Computer = tostring(column_ifexists("DeviceName", "")),
+    Account = tostring(column_ifexists("AccountName", "")),
+    ProcessId = tostring(column_ifexists("InitiatingProcessId", "")),
+    CommandLineMapped = tostring(column_ifexists("InitiatingProcessCommandLine", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

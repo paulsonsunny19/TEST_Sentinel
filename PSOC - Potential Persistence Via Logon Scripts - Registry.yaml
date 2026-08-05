@@ -1,0 +1,61 @@
+﻿id: 11d5dec6-c6c5-4713-b023-ae2f27fe126e
+name: PSOC - Potential Persistence Via Logon Scripts - Registry
+kind: Scheduled
+description: |-
+  This rule detects the use of the system registry to create persistence by creating a new key that runs on user login.
+  This can be used as command and control or to run other commands that may persist attacker access.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Persistence
+relevantTechniques:
+- T1037
+query: |-
+  // Detects use of registry to create persistence in the environment
+  // This uses a reg key that will run on user login and could be used to call back to attacker infrastructure or run any other commands
+  let parent_processes = dynamic(["cmd.exe","powershell.exe"]);
+  let command_line = dynamic(["UserInitMprLogonScript","HKCU\\Environment","ADD"]);
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=command_line,targetprocess_has_any="reg.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

@@ -1,0 +1,56 @@
+﻿id: ccb36182-fac5-4e21-a9fe-c58e2338283a
+name: PSOC - Detects execution of the Add-In deployment cache updating utility (AddInutil.exe)
+kind: Scheduled
+description: Detects execution of the Add-In deployment cache updating utility (AddInutil.exe) with Addinroot. An adversary may execute AddinUtil.exe that point to the adversary's Addins.Store payload.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1218
+query: |+
+  // Detects execution of the Add-In deployment cache updating utility (AddInutil.exe) with Addinroot. An adversary may execute AddinUtil.exe that point to the adversary's Addins.Store payload.
+  SecurityEvent
+  | where Process has "AddInUtil.exe"
+  | where ParentProcessName has_any ("cmd.exe","powershell.exe")
+  | where CommandLine matches regex @"(?i)\-AddinRoot\:\."
+    | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

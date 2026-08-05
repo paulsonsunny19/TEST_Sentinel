@@ -1,0 +1,49 @@
+﻿id: f335cb43-0f1f-4c77-936d-3636d7f4f69b
+name: PSOC - Monitor changes made to Sentinel by users outside of PSOC
+kind: Scheduled
+description: This rule monitors any changes made to Sentinel by users who are not a part of Presidio SOC.
+severity: Medium
+queryFrequency: 30m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1578
+query: |-
+  //Add list of all users in the SOC authorized to make changes to Sentinel into the watchlist.
+  let soc_team = (_GetWatchlist('SOC_Team') | project Email);
+  AzureActivity
+  | where OperationNameValue startswith "MICROSOFT.SECURITYINSIGHTS"
+  | where OperationNameValue != "MICROSOFT.SECURITYINSIGHTS/REGISTER/ACTION"
+  | where Caller !in (soc_team)
+  | extend
+      Account = tostring(column_ifexists("Caller", "")),
+      SourceIP = tostring(column_ifexists("CallerIpAddress", "")),
+      Resource = tostring(column_ifexists("_ResourceId", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []

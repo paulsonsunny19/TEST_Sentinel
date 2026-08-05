@@ -1,0 +1,61 @@
+﻿id: c2b16588-0185-4f96-9066-4c504ba5fd3c
+name: PSOC - Suspicious remote wmi command attempt
+kind: Scheduled
+description: |-
+  Detects the suspicious use of legitimate wmic.exe
+  This one in particular will detect remote commands
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1047
+query: |-
+  // Detects the suspicious use of legitimate wmic.exe
+  // This one in particular will detect remote commands
+  let parent_processes = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all = dynamic(["/node","process call create"]);
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all,targetprocess_has_any="wmic.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

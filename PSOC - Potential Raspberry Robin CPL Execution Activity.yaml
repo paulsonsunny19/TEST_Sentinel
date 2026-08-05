@@ -1,0 +1,61 @@
+﻿id: e4bf8c45-6e28-4f9b-9d07-ac83c49cac6a
+name: PSOC - Potential Raspberry Robin CPL Execution Activity
+kind: Scheduled
+description: |-
+  Detects the execution of a ".CPL" file located in the user temp directory via the Shell32 DLL "Control_RunDLL" export function.
+  This behavior was observed in multiple Raspberry-Robin variants.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1218.011
+query: |-
+  // Detects the execution of a ".CPL" file located in the user temp directory via the Shell32 DLL "Control_RunDLL" export function.
+  //This behavior was observed in multiple Raspberry-Robin variants.
+  let parent_processes = dynamic(["rundll32.exe"]);
+  let cmd_any = dynamic(["shell32.dll","Control_RunDLL",".CPL","AppData\\Local\\Temp"]);
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_any=cmd_any,targetprocess_has_any="rundll32.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

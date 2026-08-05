@@ -1,0 +1,61 @@
+﻿id: 7b33f149-e270-42e8-b64c-a074a02b9e7f
+name: PSOC - Potential Impacket Lateral Movement Activity
+kind: Scheduled
+description: |-
+  Detects the use of impacket lateral movement
+  This will pick up command execution and lateral movement
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1047
+query: |-
+  // Detects the use of impacket lateral movement
+  // This will pick up command execution and lateral movement
+  let parent_processes = dynamic(["wmiprvse.exe","mmc.exe","explorer.exe","services.exe"]);
+  let cmd_all = dynamic(["127.0.0.1","/Q","/c","cmd.exe","&1"]);
+  _Im_ProcessCreate(parentprocess_has_any=parent_processes,commandline_has_all=cmd_all)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine  
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

@@ -1,0 +1,68 @@
+﻿id: 3ca485d6-7f3e-430e-89af-229e992bae61
+name: PSOC - Suspicious LOLBin Persistence activity
+kind: Scheduled
+description: |-
+  Detects persistence via registry keys
+  Attackers use legit binaries to set reg keys enabling persistence.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Persistence
+relevantTechniques:
+- T1547.001
+query: |-
+  // Service Ticket #4231548 - Sentinel - Cover Windows Registry ControlSet00x in addition to CurrentControlSet
+  // Detects persistence via registry keys
+  // Attackers use legit binaries to set reg keys enabling persistence.
+  let ProcessNames = dynamic(["reg.exe"]);
+  let parent_processes = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all = dynamic(["/v","/t"]); // removed "/d 0" as there might be multiple spaces
+  let cmd_any = dynamic([
+      "\\SYSTEM\\ControlSet001\\Control\\Terminal Server\\Utilities\\query",
+      "\\SYSTEM\\ControlSet002\\Control\\Terminal Server\\Utilities\\query",
+      "\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\Utilities\\query"
+  ]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames,parentprocess_has_any=parent_processes,commandline_has_all=cmd_all,commandline_has_any=cmd_any)
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

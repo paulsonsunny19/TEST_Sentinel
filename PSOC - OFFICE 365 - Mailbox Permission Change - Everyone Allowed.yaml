@@ -1,0 +1,49 @@
+﻿id: b4168e27-056b-4818-846e-5b257cc4e690
+name: PSOC - OFFICE 365 - Mailbox Permission Change - Everyone Allowed
+kind: Scheduled
+description: |-
+  detects suspicious mailbox activity. Everyone allowed is insecure.
+  possible false positives can be an admin working on the mailbox, but they should remove this permission once work is completed.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Persistence
+relevantTechniques:
+- T1098
+query: |-
+  //detects suspicious mailbox activity. Everyone allowed is insecure.
+  //possible false positives can be an admin working on the mailbox, but they should remove this permission once work is completed.
+  OfficeActivity
+  | where Operation == "ModifyFolderPermissions"
+  | where Item has ("everyone")
+  | where Item has ("top of information store")
+    | extend
+      Account = tostring(column_ifexists("UserId", "")),
+      SourceIP = tostring(column_ifexists("ClientIP", ""))
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

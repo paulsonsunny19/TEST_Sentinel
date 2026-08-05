@@ -1,0 +1,64 @@
+﻿id: 9171eb02-7132-4033-aea6-97eed9166454
+name: WMImplant/CIMplant Detection rule
+kind: Scheduled
+description: Detects WMI Implants
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Execution
+relevantTechniques:
+- T1047
+query: |+
+  //detects wmi based implants used by attackers
+  let reg_events =
+      SecurityEvent
+      | where EventID == 4657
+      | where ObjectName has "\\SYSTEM\\ControlSet001\\Control\\CrashControl"
+      | where tolower(ObjectValueName) has "DumpFile";
+  let cmd_all1 = dynamic(["[Out-String).Trim()","[Int[]][Char[]]","Get-WmiObject -Class Win32_OSRecoveryConfiguration","DebugFilePath"]);
+  let cmd_events = _Im_ProcessCreate(commandline_has_all=cmd_all1);
+  union isfuzzy=true
+  reg_events,cmd_events
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

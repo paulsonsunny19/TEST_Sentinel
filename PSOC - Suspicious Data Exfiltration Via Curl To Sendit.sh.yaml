@@ -1,0 +1,49 @@
+﻿id: 67a83787-530e-4db9-b01f-b7c6e39eb5f3
+name: PSOC - Suspicious Data Exfiltration Via Curl To Sendit.sh
+kind: Scheduled
+description: Detects the use of curl.exe to exfiltrate data to the public file-transfer service sendit.sh using the form post flag (-F) and file upload syntax (file=@). This specific tradecraft was observed being utilized for data exfiltration in a 2026 Seedworm espionage campaign.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Exfiltration
+query: |-
+  SecurityEvent
+  | where EventID == 4688
+  | where EventSourceName == "Microsoft-Windows-Security-Auditing"
+  | where Process has "curl.exe"  // Process Name contains curl.exe
+  | where ParentProcessName has_any ("cmd.exe", "powershell.exe")  // Parent Process Name
+  | where CommandLine has_all ("-f", "file=@", "sendit.sh")  // Command contains all
+  | project
+      TimeGenerated,
+      Computer,
+      Account = SubjectUserName,
+      CommandLine,
+      ProcessName = Process,
+      NewProcessName,
+      ParentProcessName
+  | order by TimeGenerated desc
+entityMappings:
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: Account
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: false
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

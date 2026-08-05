@@ -1,0 +1,68 @@
+﻿id: 56164925-976d-4429-9f95-6af770e855c1
+name: PSOC - YellowKey BitLocker Bypass Detected
+kind: Scheduled
+description: Detects YellowKey Bitlocker Encryption bypass which allows attackers with physical access to bypass BitLocker encryption on Windows 11 and Windows Server 2022/2025
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+- PrivilegeEscalation
+relevantTechniques:
+- T1068
+- T1562.001
+query: |-
+  DeviceFileEvents
+  | where ActionType in ("FileCreated", "FileModified", "FileRenamed")
+  | where isnotempty(FolderPath)
+  | where FolderPath has @"\System Volume Information\FsTx\"
+       or FolderPath has @"\System Volume Information\FsTx$"
+       or FileName =~ "FsTx"
+  | extend staging_target = FolderPath has "EFI" or FolderPath matches regex @"(?i)^[D-Z]:\\System Volume Information" or FolderPath has "System_Volume_Information"
+    | project TimeGenerated, 
+            DeviceName, 
+            InitiatingProcessAccountName,
+            InitiatingProcessFileName, 
+            InitiatingProcessFolderPath, 
+            InitiatingProcessCommandLine,
+            FolderPath, 
+            FileName, 
+            ActionType, 
+            staging_target
+  | extend
+      Computer = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("InitiatingProcessAccountName", "")),
+      CommandLineMapped = tostring(column_ifexists("InitiatingProcessCommandLine", ""))
+  | order by TimeGenerated desc
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

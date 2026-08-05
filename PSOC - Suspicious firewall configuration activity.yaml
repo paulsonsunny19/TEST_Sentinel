@@ -1,0 +1,51 @@
+﻿id: 9ea47595-3d19-41ff-b731-3db358986eef
+name: PSOC - Suspicious firewall configuration activity
+kind: Scheduled
+description: Detects the removal of admin from the fortigate which could be suspicious
+severity: Medium
+queryFrequency: 30m
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |+
+  // Detects the removal of admin from the fortigate which could be suspicious
+  CommonSecurityLog
+  | where DeviceAction == 'delete'
+  | where Activity contains 'event'
+  | where Message contains 'system.admin'
+  | extend
+      ComputerName = tostring(column_ifexists("DeviceName", "")),
+      Account = tostring(column_ifexists("SourceUserName", "")),
+      SourceIP = tostring(column_ifexists("SourceIP", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: IP
+  fieldMappings:
+  - identifier: Address
+    columnName: SourceIP
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

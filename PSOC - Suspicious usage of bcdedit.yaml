@@ -1,0 +1,64 @@
+﻿id: 75d338cf-6636-4638-89dc-04636cce69cc
+name: PSOC - Suspicious usage of bcdedit
+kind: Scheduled
+description: The Bcdedit.exe command-line tool modifies the boot configuration data store. The boot configuration data store contains boot configuration parameters and controls how the operating system is booted.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- Impact
+relevantTechniques:
+- T1490
+query: |-
+  // detects suspicious usage of the legitimate tool bcedit
+  // The Bcdedit.exe command-line tool modifies the boot configuration data store. The boot configuration data store contains boot configuration parameters and controls how the operating system is booted.
+  let cmd_all = dynamic(["/set","recoveryenabled no"]);
+  let query1 = 
+  _Im_ProcessCreate(commandline_has_all=cmd_all,targetprocess_has_any="bcedit.exe");
+  let cmd_all2 = dynamic(["/set","bootstatuspolicy","ignoreallfailures"]);
+  let query2 = 
+  _Im_ProcessCreate(commandline_has_all=cmd_all2,targetprocess_has_any="bcedit.exe");
+  union isfuzzy = true
+  query1,query2
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

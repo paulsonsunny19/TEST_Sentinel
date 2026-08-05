@@ -1,0 +1,55 @@
+﻿id: ec304149-847c-482b-a6a6-2710b1fac8f3
+name: PSOC - Python Function Execution Security Warning Disabled In Excel
+kind: Scheduled
+description: Detects the removal of the registry key that controls script warning in excel
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  //Detects the removal of the registry key that controls script warning in excel
+  let eventtype = dynamic(["RegistryValueSet"]);
+  let RegistryValue = dynamic(["PythonFunctionWarnings"]);
+  let RegistryValueData = dynamic(["DWORD (0x00000000)"]);
+  _Im_RegistryEvent(eventtype_in=eventtype,registryvalue_has_any=RegistryValue,registrydata_has_any=RegistryValueData)
+  | where RegistryKey contains "\\microsoft\\office" and RegistryKey contains "\\excel\\security"
+  | extend
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      CommandLine = tostring(column_ifexists("ActingProcessCommandLine", "")),
+      ProcessId = tostring(column_ifexists("ActingProcessId", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

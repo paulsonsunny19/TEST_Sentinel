@@ -1,0 +1,65 @@
+﻿id: b5dfdfa2-418b-429e-b432-012bed2635cc
+name: PSOC - Windows Suspicious File Download From IP Via Curl.EXE
+kind: Scheduled
+description: |-
+  Detects suspicious file download using curl.exe
+  This could be an attacker downloading tools, or second stage malware execution.
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- CommandAndControl
+relevantTechniques:
+- T1071
+- T1105
+query: |+
+  // Detects suspicious file download using curl.exe
+  // This could be an attacker downloading tools, or second stage malware execution.
+  let ProcessNames = dynamic(["curl.exe"]);
+  let cmd_all = dynamic(["http"]);
+  let cmd_any = dynamic(["-o","--remote-name","--output"]);
+  _Im_ProcessCreate(targetprocess_has_any=ProcessNames,commandline_has_all=cmd_all,commandline_has_any=cmd_any)
+  | extend split(CommandLine, "curl.exe")
+  | where CommandLine has_any (".bat",".dat",".dll",".exe",".gif",".hta",".jpeg",".log",".msi",".png",".ps1",".psm1",".vbe",".vbs")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

@@ -1,0 +1,61 @@
+﻿id: a59e3e8c-ecba-46a1-b213-9c084fa6200f
+name: PSOC - Windows Pass the Hash Activity
+kind: Scheduled
+description: |-
+  Detects unusual or rare login types that can indicate pass the hash
+  Known false positives are software such as ADAudit that can trigger this
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- LateralMovement
+- DefenseEvasion
+relevantTechniques:
+- T1550.002
+query: |-
+  //Detects unusual or rare login types that can indicate pass the hash
+  //Known false positives are software such as ADAudit that can trigger this
+  SecurityEvent
+  | where EventID == 4624
+  | where LogonType == 9
+  | where LogonProcessName has "seclogo"
+  | where AuthenticationPackageName has "Negotiate"
+  | extend
+      ComputerName = tostring(column_ifexists("Computer", "")),
+      Account = tostring(
+          coalesce(
+              column_ifexists("SubjectUserName", ""),
+              column_ifexists("Account", "")
+          )
+      ),
+      CommandLineMapped = tostring(column_ifexists("ServiceFileName", ""))
+entityMappings:
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: ComputerName
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+- entityType: Process
+  fieldMappings:
+  - identifier: CommandLine
+    columnName: CommandLineMapped
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

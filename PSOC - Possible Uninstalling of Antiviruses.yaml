@@ -1,0 +1,62 @@
+﻿id: 34bb59a0-7e99-4486-8868-dd8243413090
+name: PSOC - Possible Uninstalling of Antiviruses
+kind: Scheduled
+description: Detects the attempt to uninstall AV
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  //Detects the attempt to uninstall AV
+  let exclusions = dynamic(["DXL\\dxlsetup-ma.exe","OneDriveSetup.exe","GoogleUpdateSetup"]);
+  _Im_ProcessCreate
+  | where TargetProcessName has_any ("cmd.exe","powershell.exe")
+  | where CommandLine has_any ("/silent","/verysilent")
+  | where CommandLine has_any ("/noreboot","/REMSILENTNOREBOOT","/forceuninstall","/uninstall","/norestart")
+  | where CommandLine has_any ("Malwarebytes","kasper","Webroot","Avira","avg","Bitdefender","Norton","ESET","Avast","McAfee","Trend Micro","Sophos")
+  | where not(CommandLine has_any (exclusions))
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

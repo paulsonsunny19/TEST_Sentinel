@@ -1,0 +1,70 @@
+﻿id: 0956987b-1c86-4ae3-bca1-bec84e494d17
+name: PSOC - Suspicious execution of Kapeka Backdoor
+kind: Scheduled
+description: |-
+  detects the kapeka backdoor
+  ref: hxxps[://]labs[.]withsecure[.]com/publications/kapeka
+severity: High
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+- Execution
+- Persistence
+relevantTechniques:
+- T1112
+- T1053
+- T1603
+query: |-
+  //detects the kapeka backdoor
+  //ref: hxxps[://]labs[.]withsecure[.]com/publications/kapeka
+  let Parent_Process = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all = dynamic(["\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run","\"Sens Api\"","rundll32.exe",".wll","#1"]);
+  let Detects_Backdoor_Kapeka_Via_Registry_Key = _Im_ProcessCreate(parentprocess_has_any=Parent_Process,commandline_has_all=cmd_all,targetprocess_has_any="reg.exe");
+  let Parent_Process_2 = dynamic(["cmd.exe","powershell.exe"]);
+  let cmd_all_2 = dynamic(["/create","/sc ONSTART","/tn \"Sens Api\"","rundll32.exe",".wll","#1"]);
+  let Detects_Backdoor_Kapeka_Via_Schedule_Task = _Im_ProcessCreate(parentprocess_has_any=Parent_Process_2,commandline_has_all=cmd_all_2,targetprocess_has_any="schtasks.exe");
+  union isfuzzy=true
+  Detects_Backdoor_Kapeka_Via_Registry_Key,Detects_Backdoor_Kapeka_Via_Schedule_Task
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine  
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

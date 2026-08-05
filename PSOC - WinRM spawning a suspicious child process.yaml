@@ -1,0 +1,64 @@
+﻿id: 1416d4f8-833f-421d-b0b8-77b790e40845
+name: PSOC - WinRM spawning a suspicious child process
+kind: Scheduled
+description: |-
+  Detects the spawning of suspicious processes by wsmprovhost
+  This has been seen in DFIR reports on attacks
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- InitialAccess
+- Persistence
+relevantTechniques:
+- T0819
+- T1543
+query: |-
+  // Detects the spawning of suspicious processes by wsmprovhost
+  // This has been seen in DFIR reports on attacks
+  let Process_names = dynamic(["cmd.exe","sh.exe","bash.exe","powershell.exe","bitsadmin.exe","certutil.exe","schtasks.exe","whoami.exe"]);
+  _Im_ProcessCreate(targetprocess_has_any=Process_names,parentprocess_has_any="wsmprovhost.exe")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+alertDetailsOverride:
+  alertDynamicProperties: []
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+

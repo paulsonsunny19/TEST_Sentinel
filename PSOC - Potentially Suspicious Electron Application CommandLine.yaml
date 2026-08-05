@@ -1,0 +1,58 @@
+﻿id: 375a51c5-67c1-4cd9-99e6-2eda78bbf7f9
+name: PSOC - Potentially Suspicious Electron Application CommandLine
+kind: Scheduled
+description: detects suspicious command lines from electron browsers
+severity: Medium
+queryFrequency: 5m
+queryPeriod: 30m
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+- DefenseEvasion
+relevantTechniques:
+- T1562
+query: |-
+  //detects suspicious command lines from electron browsers
+  _Im_ProcessCreate
+  | where TargetProcessName has_any ("chrome.exe","code.exe","discord.exe","GitHubDesktop.exe","keybase.exe","msedge.exe","msedgewebview2.exe","msteams.exe","slack.exe","Teams.exe")
+  | where CommandLine has_any ("--browser-subprocess-path","--gpu-launcher","--renderer-cmd-prefix","--utility-cmd-prefix")
+  | extend
+      Account = tostring(column_ifexists("ActorUsername", "")),
+      AccountDomain = tostring(column_ifexists("ActorUserDomain", "")),
+      Computer = tostring(column_ifexists("DvcHostname", "")),
+      ProcessName = tostring(column_ifexists("TargetProcessName", "")),
+      ProcessId = tostring(column_ifexists("TargetProcessId", "")),
+      CommandLine = tostring(column_ifexists("CommandLine", ""))
+  | where isnotempty(ProcessName)
+entityMappings:
+- entityType: Account
+  fieldMappings:
+  - identifier: Name
+    columnName: Account
+  - identifier: NTDomain
+    columnName: AccountDomain
+- entityType: Host
+  fieldMappings:
+  - identifier: HostName
+    columnName: Computer
+- entityType: Process
+  fieldMappings:
+  - identifier: ProcessId
+    columnName: ProcessId
+  - identifier: CommandLine
+    columnName: CommandLine
+suppressionEnabled: false
+suppressionDuration: 5h
+eventGroupingSettings:
+  aggregationKind: SingleAlert
+incidentConfiguration:
+  createIncident: true
+  groupingConfiguration:
+    enabled: true
+    reopenClosedIncident: false
+    lookbackDuration: 5h
+    matchingMethod: AllEntities
+    groupByEntities: []
+    groupByAlertDetails: []
+    groupByCustomDetails: []
+
