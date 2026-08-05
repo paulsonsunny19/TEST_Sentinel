@@ -1,0 +1,47 @@
+name: Convert Sentinel YAML to ARM JSON
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.yaml"
+      - "**/*.yml"
+      - "tools/convert_sentinel_yaml.py"
+      - "requirements.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    # Prevent a commit made by this workflow from starting another conversion run.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install converter dependency
+        run: pip install -r requirements.txt
+
+      - name: Convert every Sentinel YAML rule
+        run: python tools/convert_sentinel_yaml.py --source . --output AnalyticsRules --clean
+
+      - name: Commit generated ARM JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AnalyticsRules
+          if git diff --cached --quiet; then
+            echo "No generated JSON changes."
+          else
+            git commit -m "Generate Sentinel ARM JSON from YAML"
+            git push
+          fi
